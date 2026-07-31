@@ -7,7 +7,7 @@ class Config:
     
     #base de datos sqlite
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'scanner.db').replace('\\','/')
-    SQLALCHEMY_TRAK_MODIFICATIONS = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     #Tesseract
     TESSERACT_CDM = r'C:\Program Files\Tesseract-OCR\tesseract.exe'

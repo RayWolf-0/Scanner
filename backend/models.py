@@ -25,7 +25,7 @@ class Usuario(db.Model):
     mail = db.Column(db.String(120), unique=True, nullable=False)
     run = db.Column(db.String(20), unique=True, nullable=False)
     user = db.Column(db.String(10), unique=True, nullable=False)
-    contrasena = db.Column(db.Integer, unique=True, nullable=False)
+    contrasena = db.Column(db.String(255), nullable=False)
     
 #Tabla PLANTILLA
 class Plantilla(db.Model):

@@ -3,9 +3,13 @@ import pytesseract
 from flask import Flask
 from config import Config
 from models import db, RolUsuario, EstadoDocumento
+from routes.vendedor_routes import vendedor_bp
+from routes.supervisor_routes import supervisor_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.register_blueprint(vendedor_bp)
+app.register_blueprint(supervisor_bp)
 
 #Tesseract
 pytesseract.pytesseract.tesseract_cmd = app.config['TESSERACT_CDM']
@@ -32,7 +36,7 @@ def init_db():
         db.session.add_all([ 
             EstadoDocumento(nombre_estado = 'PENDIENTE'),
             EstadoDocumento(nombre_estado = 'EN_REVISION'),
-            EstadoDocumento(nombre_estado = 'APROVADO'),
+            EstadoDocumento(nombre_estado = 'APROBADO'),
             EstadoDocumento(nombre_estado = 'RECHAZADO')                     
         ])
         
