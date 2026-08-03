@@ -1,8 +1,10 @@
 #Route del vendedor con Blueprints para el login
+from fileinput import filename
 import os
 from flask import Blueprint, jsonify, request, json, current_app
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
+import time
 
 from models import db, Usuario, Documento, EstadoDocumento, DatoExtraido
 from services.ocr_service import OCRService
@@ -46,6 +48,11 @@ def subir_documento():
     if archivo.filename == '':
         return jsonify({'error': 'archivo vacio'})
     
+    # Crear carpetas si no existen
+    os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(current_app.config['FIRMAS_FOLDER'], exist_ok=True)
+    os.makedirs(current_app.config['PDFS_FOLDER'], exist_ok=True)
+    
     #guardar imagen original
     filename = secure_filename(archivo.filename)
     ruta_imagen = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
@@ -53,56 +60,60 @@ def subir_documento():
     try:
         #procesamiento opencv
         img_alineada = ImageService.alinear_documento(ruta_imagen)
-        #validacion tesseract
-        es_valida = OCRService.validar_documento(img_alineada)
-        if not es_valida:
-            os.remove(ruta_imagen)
-            return jsonify({'error': 'la foto no pertenece a la encuesta oficial'}), 400
+        #validacion paddle
+        if not OCRService.validar_documento(img_alineada):
+            os.remove(ruta_imagen)  # Eliminar la imagen original si no es válida
+            return jsonify({'error': 'Documento no válido'}), 400
         
-        #extraccion datos
-        casilla_siempre = ImageService.evaluar_checbox(img_alineada, pos_x=100, pos_y=300, ancho=50, alto=50)
-        rut_leido = OCRService.leer_rut(img_alineada)
-
-        # fallback si no encuentra RUT por OCR completo
-        if not rut_leido:
-            rut_leido = OCRService.leer_texto_campo(img_alineada, pos_x=200, pos_y=150, ancho=300, alto=50)
-
-        #recorte firma
-        nombre_firma = f"firma_vend{id_usuario}_{filename}.png"
+        # Extracción de campos de texto según la estructura de la foto (1000x1400 px)
+        datos_texto = {
+            'nombre_empresa':    OCRService.leer_texto_campo(img_alineada, pos_x=310, pos_y=120, ancho=500, alto=25),
+            'rut_empresa':       OCRService.leer_rut(img_alineada),
+            'nombre_encuestado': OCRService.leer_texto_campo(img_alineada, pos_x=310, pos_y=170, ancho=500, alto=25),
+            'cargo':             OCRService.leer_texto_campo(img_alineada, pos_x=310, pos_y=195, ancho=500, alto=25),
+            'correo':            OCRService.leer_texto_campo(img_alineada, pos_x=310, pos_y=220, ancho=300, alto=25),
+            'telefono':          OCRService.leer_texto_campo(img_alineada, pos_x=670, pos_y=220, ancho=200, alto=25),
+            'fecha':             OCRService.leer_texto_campo(img_alineada, pos_x=310, pos_y=245, ancho=300, alto=25),
+            'observaciones':     OCRService.leer_texto_campo(img_alineada, pos_x=120, pos_y=1120, ancho=750, alto=130)
+        }
+        #extraccion de casillas
+        datos_casillas = {
+            'serv_1_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=380),
+            'serv_2_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=410),
+            'serv_3_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=440),
+            'prod_1_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=520),
+            'prod_2_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=550),
+            'prod_3_siempre': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=580),
+            'rs_usa_fb': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=750),
+            'rs_usa_li': ImageService.evaluar_checbox(img_alineada, pos_x=650, pos_y=750),
+            'rs_sigue_fb': ImageService.evaluar_checbox(img_alineada, pos_x=570, pos_y=790),
+            'rs_sigue_li': ImageService.evaluar_checbox(img_alineada, pos_x=650, pos_y=790),
+        }
+        
+        #extraccion firma
+        nombre_firma = f"firma_{id_usuario}_{int(time.time())}.png"
         ruta_firma = os.path.join(current_app.config['FIRMAS_FOLDER'], nombre_firma)
         ImageService.procesar_firma(img_alineada, ruta_destino_png=ruta_firma)
         
-        #generar pdf
+        #generacion pdf
         plantilla_pdf = os.path.join(current_app.config['STORAGE_FOLDER'], 'plantilla', 'maestra.pdf')
-        ruta_pdf_generado = os.path.join(current_app.config['PDFS_FOLDER'], f"final_{filename}.pdf")
-        if os.path.exists(plantilla_pdf):
-            campos_posiciones = {
-                'rut_empresa': {'x': 200, 'y': 150, 'width': 300, 'height': 50},
-                'chk_siempre': {'x': 100, 'y': 300, 'width': 50, 'height': 50}
-            }
-            datos_texto = {
-                'rut_empresa': rut_leido,
-                'chk_siempre': '/Yes' if casilla_siempre else '/Off'
-            }
-            datos_firma = {'ruta': ruta_firma, 'x':400, 'y':1000, 'w':300, 'h':150}
-            PDFService.generar_pdf_final(
-                plantilla_pdf,
-                ruta_pdf_generado,
-                datos_texto,
-                datos_firma,
-                ruta_imagen=ruta_imagen,
-                campos_posiciones=campos_posiciones,
-                imagen_tamano=(1000, 1400)
-            )
-        else:
-            ruta_pdf_generado = None
-            
+        nombre_pdf = f"final_{int(time.time())}_{filename}.pdf"
+        ruta_pdf_generado = os.path.join(current_app.config['PDFS_FOLDER'], nombre_pdf)
+
+        PDFService.generar_pdf_final(
+            ruta_plantilla=plantilla_pdf,
+            ruta_salida=ruta_pdf_generado,
+            datos_texto=datos_texto,
+            datos_casillas=datos_casillas,
+            ruta_firma=ruta_firma
+        )
+        
         #guardar en base de datos
         estado = EstadoDocumento.query.filter_by(nombre_estado='PENDIENTE').first()
         nuevo_doc = Documento(
             id_plantilla=1,
             id_vendedor=id_usuario,
-            id_estado=estado.id_estado,
+            id_estado=estado.id_estado if estado else 1,
             ruta_imagen=ruta_imagen,
             ruta_pdf_final=ruta_pdf_generado
         )
@@ -111,14 +122,11 @@ def subir_documento():
         
         return jsonify({
             'status': 'success',
-            'id_dicumento': nuevo_doc.id_documento,
-            'mensaje': 'Documento procesao correctamente',
-            'datos_extraidos': {
-                'rut_detectado': rut_leido,
-                'casilla_siempre': casilla_siempre
-            }
+            'id_documento': nuevo_doc.id_documento,
+            'mensaje': 'Documento procesado correctamente',
+            'ruta_pdf': ruta_pdf_generado
         }), 201
         
     except Exception as e:
-        return jsonify({'status': 'error', 'mensaje': str(e) })
+        return jsonify({'status': 'error', 'mensaje': str(e)}), 500
         
