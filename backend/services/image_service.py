@@ -35,9 +35,23 @@ class ImageService:
         return ruta_destino_png
 
     @staticmethod
-    def evaluar_checbox(img_alineada, pos_x, pos_y, ancho=35, alto=25, umbral_tinta=90):
-        """Evalúa si hay trazos de lápiz dentro de la casilla recortada."""
-        roi = img_alineada[pos_y:pos_y+alto, pos_x:pos_x+ancho]
-        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray, 170, 255, cv2.THRESH_BINARY_INV)
-        return cv2.countNonZero(thresh) > umbral_tinta
+    def evaluar_checbox(roi_casilla):
+        #recorte casilla
+        if roi_casilla is None or roi_casilla.size == 0:
+            return False
+        gris = cv2.cvtColor(roi_casilla, cv2.COLOR_BGR2GRAY)
+        h, w = gris.shape
+        m_h, m_w = int(h*0.15), int(w*0.15)
+        centro = gris[m_h:h-m_h, m_w:w-m_w]
+        
+        if centro.size==0:
+            return False
+        
+        _, thresh = cv2.threshold(
+            centro, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+        )
+        
+        pixeles_negros = cv2.countNonZero(thresh)
+        total_pixeles = centro.shape[0] * centro.shape[1]
+        porcentaje = (pixeles_negros/float(total_pixeles)) * 100
+        return porcentaje > 5.0
