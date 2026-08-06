@@ -5,8 +5,14 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from config import Config
 from models import db, RolUsuario, EstadoDocumento
+
+# Módulos de rutas existentes
 from routes.vendedor_routes import vendedor_bp
 from routes.supervisor_routes import supervisor_bp
+
+# NUEVO: Importamos los Blueprints de Autenticación y Encuestas
+from routes.auth_routes import auth_bp
+from routes.encuesta_routes import encuesta_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -26,6 +32,10 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # 3. TERCERO: Registro de Blueprints
 app.register_blueprint(vendedor_bp)
 app.register_blueprint(supervisor_bp)
+
+# NUEVO: Registramos los nuevos Blueprints
+app.register_blueprint(auth_bp)
+app.register_blueprint(encuesta_bp)
 
 # Creación de carpetas necesarias
 os.makedirs(app.config.get('UPLOAD_FOLDER', 'uploads'), exist_ok=True)

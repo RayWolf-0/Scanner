@@ -1,0 +1,230 @@
+.dashboard-container { display: flex; min-height: 100vh; }
+
+/* Menú Lateral Oscuro */
+.sidebar {
+    width: 260px;
+    background-color: #2b323c;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2rem;
+}
+
+.sidebar .logo { margin-bottom: 3rem; font-size: 1.5rem; font-weight: normal; }
+
+.menu { display: flex; flex-direction: column; width: 100%; }
+
+.menu a {
+    color: #a0a5b0;
+    text-decoration: none;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    transition: 0.3s;
+    text-align: center;
+}
+
+.menu a:hover, .menu a.active { color: white; font-weight: bold; }
+.menu a.logout { margin-top: auto; color: #5dade2; }
+
+/* Contenido de la Encuesta */
+.content { flex: 1; padding: 3rem 5rem; }
+.content h1 { color: #2b323c; margin-bottom: 2rem; }
+
+.form-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.form-section h3 { margin-bottom: 15px; color: #2b323c; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 0.9rem; margin-bottom: 5px; font-weight: bold; color: #555; }
+.form-group input[type="text"], 
+.form-group input[type="email"], 
+.form-group textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+
+/* Tabla de Encuesta */
+.survey-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.survey-table th, .survey-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+.survey-table th { background-color: #f9f9f9; font-size: 0.9rem; }
+.survey-table td:first-child { text-align: left; font-weight: bold; }
+
+.checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 5px;}
+.checkbox-group label { font-weight: normal; font-size: 0.9rem;}
+
+.btn-submit { background-color: #0d3b66; color: white; border: none; padding: 15px 30px; font-size: 1.1rem; cursor: pointer; border-radius: 5px; margin-top: 20px; width: 100%; }
+.btn-submit:hover { background-color: #1a5287; }
+
+/* Estilos para la página del Login*/
+.login-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4eee1; 
+    width: 100%;
+}
+
+.login-app-title {
+    font-size: 2.8rem;
+    color: #2b323c;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.login-card {
+    background-color: #4a5568; 
+    width: 320px;
+    padding: 2.5rem 2rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+}
+
+.login-card h2 {
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.login-field {
+    width: 100%;
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-field label {
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    color: #e2e8f0;
+}
+
+.login-field input {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #2d3748;
+    border: 1px solid #1a202c;
+    border-radius: 3px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.login-field input:focus {
+    border-color: #63b3ed;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #002d5a; 
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+
+.login-btn:hover {
+    background-color: #004080;
+}
+
+.login-error {
+    background-color: #e53e3e;
+    color: white;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    text-align: center;
+}
+
+.forgot-password {
+    margin-top: 1rem;
+    color: #cbd5e0;
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* --- PÁGINA DASHBOARD / MENÚ PRINCIPAL --- */
+.dashboard-page {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #2b323c; /* Fondo oscuro idéntico a la maqueta */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 3rem;
+  color: white;
+}
+
+.dashboard-title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.dashboard-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.1s;
+  font-weight: 500;
+}
+
+.menu-btn:hover {
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.menu-btn.logout {
+  margin-top: 2rem;
+  color: #fc8181;
+  font-weight: bold;
+}
+
+.menu-btn.logout:hover {
+  color: #feb2b2;
+}
+
+/* Botón flotante para regresar al Menú */
+.btn-volver {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background-color: #2b323c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.btn-volver:hover {
+  background-color: #1a202c;
+}
