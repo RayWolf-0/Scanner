@@ -4,22 +4,26 @@ const Dashboard = ({ onSelectOption, onLogout }) => {
   return (
     <div className="dashboard-page">
       <div className="dashboard-content">
-        <h1 className="dashboard-title">Encuestas Tecbolt</h1>
+        <h1 className="dashboard-title">Scanner Tecbolt</h1>
         
         <nav className="dashboard-menu">
-          <button className="menu-btn" onClick={() => alert('Sección Perfil')}>
+          <button className="menu-btn" onClick={() => onSelectOption('perfil')}>
             Perfil
           </button>
-          <button className="menu-btn" onClick={() => alert('Sección Scanner')}>
-            Scanner (proximamente)
+          
+          <button className="menu-btn" onClick={() => alert('Scanner en desarrollo')}>
+            Scanner
           </button>
+          
           <button className="menu-btn highlight" onClick={() => onSelectOption('rellenar')}>
             Rellenar Encuesta
           </button>
-          <button className="menu-btn" onClick={() => alert('Sección Historial')}>
+          
+          <button className="menu-btn" onClick={() => onSelectOption('historial')}>
             Historial de Encuestas
           </button>
-          <button className="menu-btn" onClick={() => alert('Sección Plantilla')}>
+          
+          <button className="menu-btn" onClick={() => onSelectOption('plantilla')}>
             Plantilla Encuestas
           </button>
           

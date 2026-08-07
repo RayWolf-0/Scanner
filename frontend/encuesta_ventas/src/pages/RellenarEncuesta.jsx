@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { guardarEncuesta } from "../Api/encuestaApi";
+import html2pdf from 'html2pdf.js';
+import * as XLSX from 'xlsx';
 
 const RellenarEncuesta = () => {
     const [formData, setFormData] = useState({
@@ -9,29 +11,29 @@ const RellenarEncuesta = () => {
         cargo: '',
         fecha: '',
         telefono: '',
-        correo:'',
-        pedidos_completos:'',
-        pedidos_rapidos:'',
-        respuestas_oportunas:'',
-        producto_bien_presentado:'',
-        producto_buena_calidad:'',
-        recibe_informacion:'',
-        informacion_productos_nuevos:'',
-        contacto_con_ejecutivo:'',
-        calidad_atencion:'',
-        personal_domina_informacion:'',
-        red_social_usa:[], //varias opciones
-        red_social_sigue:[], //varias opciones
-        correo_informativo:'',
-        obs_recomen:'',
+        correo: '',
+        pedidos_completos: '',
+        pedidos_rapidos: '',
+        respuestas_oportunas: '',
+        producto_bien_presentado: '',
+        producto_buena_calidad: '',
+        recibe_informacion: '',
+        informacion_productos_nuevos: '',
+        contacto_con_ejecutivo: '',
+        calidad_atencion: '',
+        personal_domina_informacion: '',
+        red_social_usa: [],
+        red_social_sigue: [],
+        correo_informativo: '',
+        obs_recomen: '',
     });
 
     const opcionesRedes = ['Instagram', 'Tiktok', 'Facebook', 'Linkedin', 'Pinterest', 'Ninguna'];
     const opcionesEvaluacion = [
-        {label: 'Siempre >90%', val: 'Siempre >90%'},
-        {label: 'Generalmente 65%-89%', val: 'Generalmente 65%-89%'},
-        {label: 'Rara vez 40%-64%', val: 'Rara vez 40%-64%'},
-        {label: 'Nunca <40%', val: 'Nunca <40%'},
+        { label: 'Siempre >90%', val: 'Siempre >90%' },
+        { label: 'Generalmente 65%-89%', val: 'Generalmente 65%-89%' },
+        { label: 'Rara vez 40%-64%', val: 'Rara vez 40%-64%' },
+        { label: 'Nunca <40%', val: 'Nunca <40%' },
     ];
 
     const handleChange = (e) => {
@@ -39,45 +41,108 @@ const RellenarEncuesta = () => {
 
         if (type === 'checkbox') {
             setFormData((prev) => {
-            const listaActual = prev[name] || [];
-            const listaActualizada = checked
-            ? [...listaActual, value] 
-            : listaActual.filter((item) => item !== value);
+                const listaActual = prev[name] || [];
+                const listaActualizada = checked
+                    ? [...listaActual, value]
+                    : listaActual.filter((item) => item !== value);
 
-        return { ...prev, [name]: listaActualizada };
-        });
+                return { ...prev, [name]: listaActualizada };
+            });
         } else {
             setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
+
+    // Guardar encuesta en el backend
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try{
-            const result = guardarEncuesta(formData);
-            if (result.status == 'success'){
-                alert('Encuesta Guardada');
-                if (result.id_encuesta){
-                    window.open('/api/encuesta/exportar/pdf/${result.id_encuesta');
-                    window.open('/api/encuesta/exportar/excel/${result.id_encuesta');
+        try {
+            const result = await guardarEncuesta(formData);
+
+            if (result && (result.status === 'success' || result.id_encuesta)) {
+                alert('Encuesta guardada con éxito');
+                const id = result.id_encuesta || result.id;
+                if (id) {
+                    window.open(`http://localhost:5000/api/encuesta/exportar/pdf/${id}`, '_blank');
+                    window.open(`http://localhost:5000/api/encuesta/exportar/excel/${id}`, '_blank');
                 }
-            }else{
-                alert('Error al guardar: ' + (result.error || 'ocurrió un problema'));
+            } else {
+                alert('Error al guardar: ' + (result?.error || 'ocurrió un problema'));
             }
-        } catch (error){
-            console.error('Error al enviar la encuesta')
-            alert('Error de Conexión');
+        } catch (error) {
+            console.error('Error al enviar la encuesta:', error);
+            alert('Error de conexión con el servidor');
         }
     };
 
-    return(
+    // Generar PDF del formulario actual
+    const handleGenerarPDF = () => {
+        const elemento = document.getElementById('encuesta-form-container');
+
+        const opciones = {
+            margin: 10,
+            filename: `Encuesta_${formData.nombre_empresa || 'Cliente'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opciones).from(elemento).save();
+    };
+
+    // Exportar datos actuales a Excel local
+    const handleGenerarExcel = () => {
+        const datosExcel = [
+            { "Campo": "--- DATOS DEL CLIENTE ---", "Valor": "" },
+            { "Campo": "Nombre Empresa", "Valor": formData.nombre_empresa || '' },
+            { "Campo": "RUT Empresa", "Valor": formData.rut_empresa || '' },
+            { "Campo": "Nombre Encuestado", "Valor": formData.nombre_encuestado || '' },
+            { "Campo": "Cargo", "Valor": formData.cargo || '' },
+            { "Campo": "Fecha", "Valor": formData.fecha || '' },
+            { "Campo": "Teléfono", "Valor": formData.telefono || '' },
+            { "Campo": "Correo", "Valor": formData.correo || '' },
+            {},
+            { "Campo": "--- 1. EVALUACIÓN DE SERVICIOS ---", "Valor": "" },
+            { "Campo": "Pedidos Completos", "Valor": formData.pedidos_completos || '' },
+            { "Campo": "Pedidos Rápidos (24-48 hrs)", "Valor": formData.pedidos_rapidos || '' },
+            { "Campo": "Respuestas Oportunas", "Valor": formData.respuestas_oportunas || '' },
+            {},
+            { "Campo": "--- 2. EVALUACIÓN DE PRODUCTOS ---", "Valor": "" },
+            { "Campo": "Producto Bien Presentado", "Valor": formData.producto_bien_presentado || '' },
+            { "Campo": "Producto Buena Calidad", "Valor": formData.producto_buena_calidad || '' },
+            { "Campo": "Recibe Información Compras", "Valor": formData.recibe_informacion || '' },
+            { "Campo": "Información Productos Nuevos", "Valor": formData.informacion_productos_nuevos || '' },
+            {},
+            { "Campo": "--- 3. EVALUACIÓN DEL PERSONAL ---", "Valor": "" },
+            { "Campo": "Contacto con Ejecutivo", "Valor": formData.contacto_con_ejecutivo || '' },
+            { "Campo": "Calidad de Atención", "Valor": formData.calidad_atencion || '' },
+            { "Campo": "Personal Domina Información", "Valor": formData.personal_domina_informacion || '' },
+            {},
+            { "Campo": "--- 4. REDES SOCIALES ---", "Valor": "" },
+            { "Campo": "Red Social que más usa", "Valor": Array.isArray(formData.red_social_usa) ? formData.red_social_usa.join(', ') : '' },
+            { "Campo": "Red Social por donde nos sigue", "Valor": Array.isArray(formData.red_social_sigue) ? formData.red_social_sigue.join(', ') : '' },
+            { "Campo": "Recibe Correo Informativo", "Valor": formData.correo_informativo || '' },
+            {},
+            { "Campo": "--- OBSERVACIONES Y RECOMENDACIONES ---", "Valor": "" },
+            { "Campo": "Observaciones", "Valor": formData.obs_recomen || '' }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Encuesta");
+
+        XLSX.writeFile(workbook, `Encuesta_${formData.nombre_empresa || 'Cliente'}.xlsx`);
+    };
+
+    return (
         <main className="content">
             <header>
                 <h1>Rellenar Encuesta de Satisfacción 2026</h1>
             </header>
 
-            <form onSubmit={handleSubmit} className="survey-form">
-                
-                {/*Datos del Cliente*/}
+            <form id="encuesta-form-container" onSubmit={handleSubmit} className="survey-form">
+
+                {/* Datos del Cliente */}
                 <section className="form-section">
                     <h3>Datos del Cliente</h3>
                     <div className="grid-2-col">
@@ -112,7 +177,7 @@ const RellenarEncuesta = () => {
                     </div>
                 </section>
 
-                {/* Evaluación de Servicos Entregados*/}
+                {/* Evaluación de Servicios Entregados */}
                 <section className="form-section">
                     <h3>1. Evaluación de Servicios Entregados</h3>
                     <table className="survey-table">
@@ -151,7 +216,7 @@ const RellenarEncuesta = () => {
                     </table>
                 </section>
 
-                {/* Evaluacion de Productos Comprados*/}
+                {/* Evaluación de Productos Comprados */}
                 <section className="form-section">
                     <h3>2. Evaluación de Productos Comprados</h3>
                     <table className="survey-table">
@@ -198,7 +263,7 @@ const RellenarEncuesta = () => {
                     </table>
                 </section>
 
-                {/* Evaluacion del Personal*/}
+                {/* Evaluación del Personal */}
                 <section className="form-section">
                     <h3>3. Evaluación del Personal</h3>
                     <table className="survey-table">
@@ -237,10 +302,10 @@ const RellenarEncuesta = () => {
                     </table>
                 </section>
 
-                {/* Apartado de Redes Sociales*/}
+                {/* Apartado de Redes Sociales */}
                 <section className="form-section">
                     <h3>4. Redes Sociales (puede marcar más de una opción)</h3>
-                    
+
                     <div className="form-group" style={{ marginBottom: '15px' }}>
                         <label>¿Qué red social es la que más usa?</label>
                         <div className="checkbox-group">
@@ -302,7 +367,7 @@ const RellenarEncuesta = () => {
                     </div>
                 </section>
 
-                {/*Observaciones y Recomendaciones*/}
+                {/* Observaciones y Recomendaciones */}
                 <section className="form-section">
                     <h3>Observaciones y Recomendaciones</h3>
                     <textarea
@@ -314,14 +379,23 @@ const RellenarEncuesta = () => {
                     />
                 </section>
 
-                <button type="submit" className="btn-submit">
-                    Guardar Encuesta y Generar PDF/Excel
-                </button>
+                {/* Botones de acción independientes */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                    <button type="submit" className="btn-submit">
+                        Guardar Encuesta
+                    </button>
+
+                    <button type="button" className="btn-submit" onClick={handleGenerarPDF}>
+                        Generar PDF Local
+                    </button>
+
+                    <button type="button" className="btn-submit" onClick={handleGenerarExcel}>
+                        Generar Excel Local
+                    </button>
+                </div>
             </form>
         </main>
     );
-    
 };
 
 export default RellenarEncuesta;
-

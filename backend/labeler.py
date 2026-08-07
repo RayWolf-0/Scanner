@@ -5,7 +5,7 @@ import cv2
 # Definir rutas relativas al directorio actual
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'instance', 'scanner.db')
-IMAGEN_PLANTILLA = os.path.join(BASE_DIR, 'storage', 'plantilla', 'maestra.png')
+IMAGEN_PLANTILLA = os.path.join(BASE_DIR, 'storage', 'plantilla', 'maestra_referencia.png')
 
 NOMBRE_PLANTILLA = 'Encuesta Satisfaccion 2026'
 VERSION = 1

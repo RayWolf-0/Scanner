@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RellenarEncuesta from './pages/RellenarEncuesta';
+import Perfil from './pages/Perfil';
+import Historial from './pages/Historial';
+import Plantilla from './pages/Plantilla';
 import './App.css';
 
 function App() {
@@ -18,30 +21,38 @@ function App() {
     setVistaActual('dashboard');
   };
 
-  // 1. Si no hay usuario logueado, muestra la pantalla de LOGIN
+  // Login
   if (!usuario) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // 2. Si el usuario seleccionó "Rellenar Encuesta"
-  if (vistaActual === 'rellenar') {
-    return (
-      <div style={{ position: 'relative' }}>
-        <button className="btn-volver" onClick={() => setVistaActual('dashboard')}>
-          ← Volver al Menú
-        </button>
-        <RellenarEncuesta />
-      </div>
-    );
-  }
-
-  // 3. Por defecto tras loguearse: muestra la página de DASHBOARD (Menú)
-  return (
-    <Dashboard 
-      onSelectOption={(opcion) => setVistaActual(opcion)} 
-      onLogout={handleLogout} 
-    />
+  // boton volver
+  const LayoutConVolver = ({ children }) => (
+    <div style={{ position: 'relative' }}>
+      <button className="btn-volver" onClick={() => setVistaActual('dashboard')}>
+        ← Volver al Menú
+      </button>
+      {children}
+    </div>
   );
+
+  // navegar entre páginas
+  switch (vistaActual) {
+    case 'rellenar':
+      return <LayoutConVolver><RellenarEncuesta /></LayoutConVolver>;
+    case 'perfil':
+      return <LayoutConVolver><Perfil usuario={usuario} /></LayoutConVolver>;
+    case 'plantilla':
+      return <LayoutConVolver><Plantilla /></LayoutConVolver>;
+    default:
+      return <Dashboard onSelectOption={setVistaActual} onLogout={handleLogout} />;
+    case 'historial':
+      return(
+        <LayoutConVolver>
+          <Historial usuario={usuario} />
+        </LayoutConVolver>
+      );
+  }
 }
 
 export default App;
