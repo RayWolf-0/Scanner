@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: '/encuestastecbolt/',
+  build: {
+    outDir: 'dist/encuestastecbolt'
+  },
   server: {
     proxy: {
       '/api': {

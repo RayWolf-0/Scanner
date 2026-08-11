@@ -113,3 +113,12 @@ INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
 INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
 INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
 INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
