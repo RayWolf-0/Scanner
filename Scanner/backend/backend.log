@@ -1,0 +1,115 @@
+nohup: no se tendrá en cuenta la entrada
+INFO:     Started server process [929867]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8082 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58320 - "POST /auth/login HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39364 - "POST /auth/login HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50806 - "POST /auth/login HTTP/1.1" 404 Not Found
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/supervisor/usuarios/crear HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "POST /api/encuesta/guardar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/exportar/pdf/20 HTTP/1.0" 404 Not Found
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/encuesta/guardar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/exportar/pdf/21 HTTP/1.0" 404 Not Found
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/supervisor/usuarios/crear HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/supervisor/usuarios HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/encuesta/guardar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/exportar/pdf/22 HTTP/1.0" 404 Not Found
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/exportar/excel/21 HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "PUT /api/encuesta/actualizar/21 HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/exportar/excel/21 HTTP/1.0" 200 OK
+INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "PUT /api/encuesta/actualizar/22 HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
