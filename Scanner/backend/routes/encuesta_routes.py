@@ -17,14 +17,24 @@ encuesta_bp = Blueprint('encuesta_bp', __name__)
 def listar_encuestas():
     try:
         with db.engine.connect() as conn:
-            query = text("SELECT * FROM encuesta ORDER BY id_encuesta DESC")
+            query = text("""
+                SELECT 
+                    e.*, 
+                    u.user AS username,
+                    u.nombre,
+                    u.apellido,
+                    d.*
+                FROM encuesta e 
+                LEFT JOIN USUARIO u ON e.id_usuario = u.id_usuario
+                LEFT JOIN dato_extraido d ON e.id_encuesta = d.id
+                ORDER BY e.id_encuesta DESC
+            """)
             result = conn.execute(query).mappings().fetchall()
             encuestas = [dict(row) for row in result]
             return jsonify(encuestas), 200
     except Exception as e:
         print("Error en listar_encuestas:", str(e))
         return jsonify({'error': str(e)}), 500
-
 
 # guardar encuesta
 @encuesta_bp.route('/api/encuesta/guardar', methods=['POST'])
