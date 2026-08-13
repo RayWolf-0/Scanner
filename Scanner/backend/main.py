@@ -371,10 +371,15 @@ def obtener_detalle_encuesta(registro_id: int):
 def listar_encuestas():
     db = SessionLocal()
     try:
+        # ¡ESTA ES LA CONSULTA CORREGIDA! 
+        # Ahora FastAPI devolverá los nombres igual que la versión de Flask
         query = text("""
-            SELECT e.id_encuesta as id, e.empresa, e.rut, e.encuestado, 
-                   e.cargo, e.fecha, e.id_usuario
-            FROM encuesta e
+            SELECT 
+                e.*, 
+                (SELECT user FROM USUARIO WHERE id_usuario = e.id_usuario) AS username,
+                (SELECT nombre FROM USUARIO WHERE id_usuario = e.id_usuario) AS nombre,
+                (SELECT apellido FROM USUARIO WHERE id_usuario = e.id_usuario) AS apellido
+            FROM encuesta e 
             ORDER BY e.id_encuesta DESC
         """)
         resultados = db.execute(query).mappings().fetchall()

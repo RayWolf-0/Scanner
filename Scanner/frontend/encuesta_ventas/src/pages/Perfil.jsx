@@ -11,19 +11,27 @@ const parseFechaLocal = (fechaStr) => {
   return new Date(fechaStr);
 };
 
+// Función auxiliar para obtener el nombre del vendedor
+const getVendedorNombre = (e) => {
+  if (!e) return 'Desconocido';
+  if (e.nombre) return `${e.nombre} ${e.apellido || ''}`.trim();
+  if (e.username) return e.username;
+  if (e.user) return e.user;
+  return e.id_usuario || 'Desconocido';
+};
 
 const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
+  const [encuestasGlobales, setEncuestasGlobales] = useState([]);
   const [statsMes, setStatsMes] = useState([]);
+  const [vendedorFiltro, setVendedorFiltro] = useState('todos');
+  
   const [passwordActual, setPasswordActual] = useState('');
   const [passwordNueva, setPasswordNueva] = useState('');
   const [mensajePass, setMensajePass] = useState('');
 
-
   const datosUsr = usuario?.usuario || usuario; 
-
   const idUsuarioActual = datosUsr?.id_usuario || datosUsr?.id || datosUsr?.userId;
   
-
   const rolVal = datosUsr?.rol !== undefined ? datosUsr.rol : datosUsr?.id_rol;
   const textoRol = String(rolVal || '').toLowerCase();
   const textoUsuario = String(datosUsr?.user || datosUsr?.username || datosUsr?.mail || '').toLowerCase();
@@ -34,7 +42,6 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     textoUsuario.includes('mgonza') || 
     textoUsuario.includes('maria');
 
-
   const nombreMostrado = 
     datosUsr?.nombre || 
     (datosUsr?.nombres && datosUsr?.apellidos ? `${datosUsr.nombres} ${datosUsr.apellidos}` : null) || 
@@ -43,38 +50,14 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     datosUsr?.mail || 
     'Usuario';
 
+  // Efecto para Cargar todas las encuestas
   useEffect(() => {
-    const cargarEstadisticas = async () => {
+    const cargarEncuestas = async () => {
       try {
         const response = await fetch('/api/encuesta/listar');
         if (response.ok) {
-          const encuestas = await response.json();
-          const mesActualIndex = new Date().getMonth();
-
-          const estructuraMeses = NOMBRES_MESES.slice(0, mesActualIndex + 1).map((mes) => ({
-            mes,
-            cantidad: 0
-          }));
-
-          if (Array.isArray(encuestas)) {
-            const encuestasDelUsuario = encuestas.filter((e) => {
-              if (!idUsuarioActual) return true;
-              return Number(e.id_usuario) === Number(idUsuarioActual);
-            });
-
-            encuestasDelUsuario.forEach((encuesta) => {
-              if (encuesta.fecha) {
-                const fechaObj = parseFechaLocal(encuesta.fecha); 
-                if (fechaObj) {
-                  const mesEncuesta = fechaObj.getMonth();
-                  if (!isNaN(mesEncuesta) && mesEncuesta <= mesActualIndex) {
-                    estructuraMeses[mesEncuesta].cantidad += 1;
-                  }
-                }
-              }
-            });
-          }
-          setStatsMes(estructuraMeses);
+          const data = await response.json();
+          setEncuestasGlobales(Array.isArray(data) ? data : (data.encuestas || []));
         }
       } catch (error) {
         console.log('Error al conectar con la base de datos', error);
@@ -82,9 +65,47 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     };
 
     if (usuario) {
-      cargarEstadisticas();
+      cargarEncuestas();
     }
-  }, [usuario, idUsuarioActual]);
+  }, [usuario]);
+
+  // Efecto para Calcular las estadísticas del gráfico según el filtro
+  useEffect(() => {
+    const mesActualIndex = new Date().getMonth();
+    const estructuraMeses = NOMBRES_MESES.slice(0, mesActualIndex + 1).map((mes) => ({
+      mes,
+      cantidad: 0
+    }));
+
+    if (encuestasGlobales.length > 0) {
+      // Filtrar según el rol y la selección
+      const encuestasFiltradas = encuestasGlobales.filter((e) => {
+        if (esSupervisor) {
+          if (vendedorFiltro === 'todos') return true;
+          return String(getVendedorNombre(e)) === String(vendedorFiltro);
+        } else {
+          // El usuario común (vendedor) solo verá sus estadisticas
+          if (!idUsuarioActual) return true;
+          return Number(e.id_usuario) === Number(idUsuarioActual);
+        }
+      });
+
+      // Llenar datos del mes
+      encuestasFiltradas.forEach((encuesta) => {
+        if (encuesta.fecha) {
+          const fechaObj = parseFechaLocal(encuesta.fecha); 
+          if (fechaObj && !isNaN(fechaObj.getTime())) {
+            const mesEncuesta = fechaObj.getMonth();
+            if (mesEncuesta <= mesActualIndex) {
+              estructuraMeses[mesEncuesta].cantidad += 1;
+            }
+          }
+        }
+      });
+    }
+
+    setStatsMes(estructuraMeses);
+  }, [encuestasGlobales, vendedorFiltro, esSupervisor, idUsuarioActual]);
 
   const handleCambiarPassword = async (e) => {
     e.preventDefault();
@@ -112,6 +133,9 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
       setMensajePass('Error de conexión con el servidor');
     }
   };
+
+  // Obtener lista de vendedores únicos
+  const vendedoresUnicos = Array.from(new Set(encuestasGlobales.map(getVendedorNombre))).filter(Boolean);
 
   const maxCantidad = statsMes.length > 0 ? Math.max(...statsMes.map((d) => d.cantidad), 1) : 1;
 
@@ -185,7 +209,25 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
 
         {/* Gráfico de Estadísticas por Mes */}
         <div className="chart-section">
-          <h3 className="chart-title">Encuestas Realizadas por Mes</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 className="chart-title" style={{ margin: 0 }}>
+              Encuestas Realizadas {esSupervisor && vendedorFiltro !== 'todos' ? `por ${vendedorFiltro}` : 'por Mes'}
+            </h3>
+            
+            {/* Filtro para Supervisores */}
+            {esSupervisor && (
+              <select 
+                value={vendedorFiltro} 
+                onChange={(e) => setVendedorFiltro(e.target.value)}
+                style={{ padding: '6px', borderRadius: '4px', background: '#222', color: '#fff', border: '1px solid #444', fontSize: '13px', cursor: 'pointer' }}
+              >
+                <option value="todos">Todos los usuarios</option>
+                {vendedoresUnicos.map((v, idx) => (
+                  <option key={idx} value={v}>{v}</option>
+                ))}
+              </select>
+            )}
+          </div>
 
           <div className="bar-chart-container">
             {statsMes.map((item, index) => {

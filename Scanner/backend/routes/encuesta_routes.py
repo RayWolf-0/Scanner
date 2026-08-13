@@ -18,15 +18,12 @@ def listar_encuestas():
     try:
         with db.engine.connect() as conn:
             query = text("""
-                SELECT 
+            SELECT 
                     e.*, 
-                    u.user AS username,
-                    u.nombre,
-                    u.apellido,
-                    d.*
+                    (SELECT user FROM USUARIO WHERE id_usuario = e.id_usuario) AS username,
+                    (SELECT nombre FROM USUARIO WHERE id_usuario = e.id_usuario) AS nombre,
+                    (SELECT apellido FROM USUARIO WHERE id_usuario = e.id_usuario) AS apellido
                 FROM encuesta e 
-                LEFT JOIN USUARIO u ON e.id_usuario = u.id_usuario
-                LEFT JOIN dato_extraido d ON e.id_encuesta = d.id
                 ORDER BY e.id_encuesta DESC
             """)
             result = conn.execute(query).mappings().fetchall()

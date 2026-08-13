@@ -37,6 +37,39 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
         { label: 'Nunca <40%', val: 'Nunca <40%' },
     ];
 
+    // Función para validar RUT
+    const validarRut = (rutCompleto) => {
+        if (!rutCompleto) return false;
+        // Acepta numeros y K
+        const cleanRut = rutCompleto.replace(/[^0-9kK]/g, '').toUpperCase();
+        if (cleanRut.length < 2) return false;
+
+        const cuerpo = cleanRut.slice(0, -1);
+        const dv = cleanRut.slice(-1);
+
+        let suma = 0;
+        let multiplo = 2;
+
+        // Calculo del rut
+        for (let i = 1; i <= cuerpo.length; i++) {
+            const index = multiplo * cleanRut.charAt(cuerpo.length - i);
+            suma = suma + index;
+            if (multiplo < 7) { 
+                multiplo = multiplo + 1; 
+            } else { 
+                multiplo = 2; 
+            }
+        }
+
+        const dvEsperado = 11 - (suma % 11);
+        let dvCalculado = dvEsperado.toString();
+        
+        if (dvEsperado === 11) dvCalculado = "0";
+        if (dvEsperado === 10) dvCalculado = "K";
+
+        return dvCalculado === dv;
+    };
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
@@ -52,14 +85,22 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
         } else {
             let valorProcesado = value;
 
+            // Filtros estrictos de caracteres
             if (name === 'rut_empresa') {
-                valorProcesado = value.replace(/\./g, '');
+                // Bloquea puntos y comas
+                valorProcesado = value.replace(/[.,]/g, '');
             }
             else if (name === 'telefono') {
+                // \D bloquea todo lo que no sea número (incluye puntos y comas)
                 valorProcesado = value.replace(/\D/g, '');
             }
             else if (name === 'nombre_empresa' || name === 'nombre_encuestado') {
-                valorProcesado = value.replace(/[0-9]/g, '');
+                // Bloquea números, puntos y comas
+                valorProcesado = value.replace(/[0-9.,]/g, '');
+            }
+            else if (name === 'cargo') {
+                // Bloquea puntos y comas
+                valorProcesado = value.replace(/[.,]/g, '');
             }
 
             setFormData((prev) => ({ ...prev, [name]: valorProcesado }));
@@ -79,8 +120,15 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
         console.error("Error leyendo el usuario de localStorage", error);
     }
 
-const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Verificar el RUT antes de intentar guardarlo
+        if (!validarRut(formData.rut_empresa)) {
+            alert('El RUT ingresado no es válido. Por favor, verifíquelo antes de guardar.');
+            return; // Detiene el envío si el RUT está mal
+        }
+
         try {
             const datosConUsuario = {
                 ...formData,
@@ -103,6 +151,7 @@ const handleSubmit = async (e) => {
             alert('Error de conexión con el servidor');
         }
     };
+    
     const handleGenerarExcel = () => {
         const datosExcel = [
             { "Campo": "--- DATOS DEL CLIENTE ---", "Valor": "" },
@@ -192,7 +241,16 @@ const handleSubmit = async (e) => {
                             <input type="text" name="nombre_empresa" value={formData.nombre_empresa} onChange={handleChange} required />
                         </div>
                         <div className="form-group">
-                            <label>RUT Empresa (Sin puntos):</label>
+                            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                RUT Empresa (Ej: 12345678-9):
+                                {formData.rut_empresa && (
+                                    validarRut(formData.rut_empresa) ? (
+                                        <span style={{ color: '#28a745', fontSize: '13px', fontWeight: 'bold' }}>🟢</span>
+                                    ) : (
+                                        <span style={{ color: '#dc3545', fontSize: '13px', fontWeight: 'bold' }}>🔴 RUT incorrecto</span>
+                                    )
+                                )}
+                            </label>
                             <input type="text" name="rut_empresa" value={formData.rut_empresa} onChange={handleChange} placeholder="Ej: 12345678-9" required />
                         </div>
                         <div className="form-group">
@@ -417,7 +475,7 @@ const handleSubmit = async (e) => {
                     />
                 </section>
 
-                {/* Botones de acción perfectamente uniformes y alineados */}
+                {/* Botones de acción*/}
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', alignItems: 'stretch' }}>
                     <button type="submit" className="btn-submit" style={{ flex: 1, padding: '12px 15px', fontSize: '14px', borderRadius: '6px', textAlign: 'center', cursor: 'pointer' }}>
                         Guardar Encuesta
@@ -430,14 +488,10 @@ const handleSubmit = async (e) => {
                     >
                         {({ loading }) => (
                             <button type="button" className="btn-submit" disabled={loading} style={{ width: '100%', padding: '12px 15px', fontSize: '14px', borderRadius: '6px', textAlign: 'center', cursor: 'pointer' }}>
-                                {loading ? 'Preparando PDF...' : 'Generar PDF Local'}
+                                {loading ? 'Preparando PDF...' : 'Generar PDF'}
                             </button>
                         )}
                     </PDFDownloadLink>
-
-                    <button type="button" className="btn-submit" onClick={handleGenerarExcel} style={{ flex: 1, padding: '12px 15px', fontSize: '14px', borderRadius: '6px', textAlign: 'center', cursor: 'pointer' }}>
-                        Generar Excel Local
-                    </button>
                 </div>
             </form>
         </main>

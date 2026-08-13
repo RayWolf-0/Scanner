@@ -12,14 +12,23 @@ const REDES_OPCIONES = ['Instagram', 'TikTok', 'Facebook', 'LinkedIn', 'Pinteres
 
 const API_BASE_URL = '/api/encuesta';
 
-// Prioriza buscar el nombre en texto. Si el Backend manda el JOIN de 'username', lo tomará automático.
+// Función para editar el PDF
 const getVendedorNombre = (e) => {
   if (!e) return 'Desconocido';
-  if (e.username && isNaN(e.username)) return e.username;
-  if (e.user && isNaN(e.user)) return e.user;
-  if (e.nombre_vendedor && isNaN(e.nombre_vendedor)) return e.nombre_vendedor;
-  if (e.nombre && isNaN(e.nombre)) return e.nombre;
-  return e.id_usuario || e.vendedor || 'Desconocido';
+  
+  // coloca el user
+  if (e.username) return e.username;
+  if (e.user) return e.user;
+  
+  if (e.usuario && e.usuario !== 'Vendedor') return e.usuario; 
+  
+  // coloca el nombre si no encuentra el user (no debería de pasar :b)
+  if (e.nombre) return `${e.nombre} ${e.apellido || ''}`.trim();
+  if (e.nombre_vendedor) return e.nombre_vendedor;
+  if (e.vendedor) return e.vendedor;
+
+  // id
+  return e.id_usuario || 'Desconocido';
 };
 
 const Historial = ({ usuario }) => {
@@ -150,7 +159,51 @@ const Historial = ({ usuario }) => {
       const res = await fetch(`${API_BASE_URL}/detalle/${id}`, { cache: 'no-store' });
       if (!res.ok) throw new Error();
       const datosCompletos = await res.json();
-      const blob = await pdf(<EncuestaPDF datos={datosCompletos} />).toBlob();
+
+      const encuestaEnLista = encuestas.find(e => (e.id_encuesta || e.id) === id);
+      const vendedorReal = getVendedorNombre(encuestaEnLista || datosCompletos);
+
+      const usaStr = String(datosCompletos.red_mas_usa || datosCompletos.red_social_usa || '').toLowerCase();
+      const sigueStr = String(datosCompletos.red_sigue || datosCompletos.red_social_sigue || '').toLowerCase();
+
+      let correoInfo = 'NO'; 
+      if (datosCompletos.correo_informativo !== undefined && datosCompletos.correo_informativo !== null) {
+          const valCorreo = String(datosCompletos.correo_informativo).trim().toUpperCase();
+          if (valCorreo === '1' || valCorreo === 'SI' || valCorreo === 'TRUE') correoInfo = 'SI';
+          if (valCorreo === '0' || valCorreo === 'NO' || valCorreo === 'FALSE') correoInfo = 'NO';
+      }
+
+      const datosParaPDF = {
+          empresa: datosCompletos.empresa || datosCompletos.nombre_empresa || '',
+          rut: datosCompletos.rut || datosCompletos.rut_empresa || '',
+          encuestado: datosCompletos.encuestado || datosCompletos.nombre_encuestado || '',
+          cargo: datosCompletos.cargo || '',
+          correo: datosCompletos.correo || '',
+          telefono: datosCompletos.telefono || '',
+          fecha: datosCompletos.fecha || '',
+          p1_1: String(datosCompletos.p1_1 || datosCompletos.pedidos_completos || '').split(' ')[0], 
+          p1_2: String(datosCompletos.p1_2 || datosCompletos.pedidos_rapidos || '').split(' ')[0],
+          p1_3: String(datosCompletos.p1_3 || datosCompletos.respuestas_oportunas || '').split(' ')[0],
+          p2_1: String(datosCompletos.p2_1 || datosCompletos.producto_bien_presentado || '').split(' ')[0],
+          p2_2: String(datosCompletos.p2_2 || datosCompletos.producto_buena_calidad || '').split(' ')[0],
+          p2_3: String(datosCompletos.p2_3 || datosCompletos.informacion_productos_nuevos || '').split(' ')[0],
+          p3_1: String(datosCompletos.p3_1 || datosCompletos.contacto_con_ejecutivo || '').split(' ')[0],
+          p3_2: String(datosCompletos.p3_2 || datosCompletos.calidad_atencion || '').split(' ')[0],
+          p3_3: String(datosCompletos.p3_3 || datosCompletos.personal_domina_informacion || '').split(' ')[0],
+          rs_instagram: usaStr.includes('instagram') || sigueStr.includes('instagram'),
+          rs_tiktok: usaStr.includes('tiktok') || sigueStr.includes('tiktok'),
+          rs_facebook: usaStr.includes('facebook') || sigueStr.includes('facebook'),
+          rs_linkedin: usaStr.includes('linkedin') || sigueStr.includes('linkedin'),
+          rs_pinterest: usaStr.includes('pinterest') || sigueStr.includes('pinterest'),
+          rs_ninguna: usaStr.includes('ninguna') || sigueStr.includes('ninguna'),
+          red_mas_usa: datosCompletos.red_mas_usa || datosCompletos.red_social_usa || '',
+          red_sigue: datosCompletos.red_sigue || datosCompletos.red_social_sigue || '',
+          correo_informativo: correoInfo,
+          observaciones: datosCompletos.observaciones || datosCompletos.obs_recomen || '',
+          usuario: vendedorReal 
+      };
+
+      const blob = await pdf(<EncuestaPDF datos={datosParaPDF} />).toBlob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `Encuesta_${id}.pdf`;
@@ -244,7 +297,8 @@ const Historial = ({ usuario }) => {
       };
 
       const getCor = (val) => {
-        const str = String(val || '').trim().toUpperCase();
+        if (val == null || val == undefined) return ["",""];
+        const str = String(val).trim().toUpperCase();
         if (str === 'SI' || str === '1' || str === 'TRUE') return [1, ""];
         if (str === 'NO' || str === '0' || str === 'FALSE') return ["", 1];
         return ["", ""];
@@ -306,7 +360,7 @@ const Historial = ({ usuario }) => {
     <div className="historial-container">
       <div className="historial-card">
         <h2 className="historial-title">
-          {esSupervisor ? 'Historial General de Encuestas (Vista Supervisor)' : 'Historial de Encuestas'}
+          {esSupervisor ? 'Historial General de Encuestas' : 'Historial de Encuestas'}
         </h2>
 
         <div className="filtros-bar">
@@ -353,7 +407,7 @@ const Historial = ({ usuario }) => {
                   <th>Encuestado</th>
                   <th>Cargo</th>
                   <th>Fecha</th>
-                  {esSupervisor && <th>Vendedor (Usuario)</th>}
+                  {esSupervisor && <th>Vendedor</th>}
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -369,7 +423,6 @@ const Historial = ({ usuario }) => {
                       <td>{enc.fecha || 'N/A'}</td>
                       {esSupervisor && <td>{getVendedorNombre(enc)}</td>}
                       
-                      {/* Alineación de acciones fija */}
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
                           <button className="btn-accion btn-pdf" onClick={() => descargarPDFReact(idEnc)}>PDF</button>
