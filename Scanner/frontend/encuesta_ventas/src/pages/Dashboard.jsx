@@ -11,10 +11,6 @@ const Dashboard = ({ onSelectOption, onLogout }) => {
             Perfil
           </button>
           
-          <button className="menu-btn" onClick={() => alert('Scanner en desarrollo')}>
-            Scanner
-          </button>
-          
           <button className="menu-btn highlight" onClick={() => onSelectOption('rellenar')}>
             Rellenar Encuesta
           </button>

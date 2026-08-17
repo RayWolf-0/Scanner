@@ -1,159 +1,24 @@
 nohup: no se tendrá en cuenta la entrada
-INFO:     Will watch for changes in these directories: ['/home/ctest/Proyecto_Encuesta_Ventas/Scanner/backend']
-INFO:     Uvicorn running on http://127.0.0.1:8082 (Press CTRL+C to quit)
-INFO:     Started reloader process [974554] using StatReload
-INFO:     Started server process [974557]
+INFO:     Started server process [50325]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/25 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/23 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/17 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/14 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/18 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/19 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/16 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/13 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/9 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/10 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/12 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/8 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/11 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/7 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/5 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "POST /api/encuesta/guardar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "PUT /api/encuesta/actualizar/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "POST /api/auth/login HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "PUT /api/encuesta/actualizar/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "POST /api/encuesta/guardar HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/25 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/23 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/19 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/18 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/17 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/16 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/14 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/13 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/12 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/11 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/9 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/10 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/8 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/7 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/5 HTTP/1.0" 200 OK
-INFO:     192.168.17.56:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/25 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/23 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/17 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/18 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/16 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/19 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/14 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/13 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/10 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/12 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/11 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/9 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/8 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/7 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/5 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/25 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/23 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/17 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/19 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/18 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/16 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/11 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/10 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/9 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/12 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/13 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/14 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/8 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/5 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/7 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/listar HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/28 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/27 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/26 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/25 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/22 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/23 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/24 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/20 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/17 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/18 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/19 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/16 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/21 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/14 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/13 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/12 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/11 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/9 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/8 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/10 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/7 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/6 HTTP/1.0" 200 OK
-INFO:     192.168.17.209:0 - "GET /api/encuesta/detalle/5 HTTP/1.0" 200 OK
+INFO:     Uvicorn running on http://0.0.0.0:8082 (Press CTRL+C to quit)
+which: no ccache in (/home/ctest/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/home/ctest/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/home/ctest/.vscode-server/cli/servers/Stable-a5b500951314efd502d07465bd138dfbd714a960/server/bin/remote-cli:/home/ctest/.nvm/versions/node/v20.20.2/bin:/home/ctest/.local/bin:/home/ctest/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/ctest/.vscode-server/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts)
+/home/ctest/Proyecto_Encuesta_Ventas/Scanner/backend/venv/lib64/python3.9/site-packages/paddle/utils/cpp_extension/extension_utils.py:712: UserWarning: No ccache found. Please be aware that recompiling all source files may be required. You can download and install ccache from: https://github.com/ccache/ccache/blob/master/doc/INSTALL.md
+  warnings.warn(warning_message)
+[32mCreating model: ('PP-LCNet_x1_0_doc_ori', None, None)[0m
+[32mModel files already exist. Using cached files. To redownload, please delete the directory manually: `/home/ctest/.paddlex/official_models/PP-LCNet_x1_0_doc_ori`.[0m
+[32mCreating model: ('UVDoc', None, None)[0m
+[32mModel files already exist. Using cached files. To redownload, please delete the directory manually: `/home/ctest/.paddlex/official_models/UVDoc`.[0m
+[32mCreating model: ('PP-LCNet_x1_0_textline_ori', None, None)[0m
+[32mModel files already exist. Using cached files. To redownload, please delete the directory manually: `/home/ctest/.paddlex/official_models/PP-LCNet_x1_0_textline_ori`.[0m
+[32mCreating model: ('PP-OCRv6_medium_det', None, None)[0m
+[32mModel files already exist. Using cached files. To redownload, please delete the directory manually: `/home/ctest/.paddlex/official_models/PP-OCRv6_medium_det`.[0m
+[32mCreating model: ('PP-OCRv6_medium_rec', None, None)[0m
+[32mModel files already exist. Using cached files. To redownload, please delete the directory manually: `/home/ctest/.paddlex/official_models/PP-OCRv6_medium_rec`.[0m
+[API SCANNER] Procesando fotografía con FastAPI...
+[SCANNER] Iniciando extracción de texto...
+[OCR TEXTO CAPTURADO EXITOSAMENTE]
+[SCANNER] Alineando imagen y buscando Checkboxes...
+[ANALISIS EXITOSO] Datos correctamente extraidos: {'nombre_empresa': 'TeckboiT', 'rut_empresa': '123456789', 'nombre_encuestado': 'LyA', 'cargo': 'OPERARIO', 'correo': '', 'telefono': '99999999', 'fecha': '31-07-2026', 'observaciones': 'Esto esta funcionando Correctaments', 'Casilla 1': False, 'Casilla 2': False, 'Casilla 3': False, 'Casilla 4': False, 'Casilla 5': False, 'Casilla 6': True, 'Casilla 7': False, 'Casilla 8': True, 'Casilla 9': True, 'Casilla 10': False, 'Casilla 11': True, 'Casilla 12': True, 'Casilla 13': False, 'Casilla 14': False, 'Casilla 15': False, 'Casilla 16': False, 'Casilla 17': True, 'Casilla 18': False, 'Casilla 19': False, 'Casilla 20': False, 'Casilla 21': True, 'Casilla 22': False, 'Casilla 23': False, 'Casilla 24': False, 'Casilla 25': False, 'Casilla 26': False, 'Casilla 27': False, 'Casilla 28': False, 'Casilla 29': False, 'Casilla 30': False, 'Casilla 31': True, 'Casilla 32': False, 'Casilla 33': True, 'Casilla 34': False, 'Casilla 35': False, 'Casilla 36': False, 'Casilla 37': False, 'Casilla 38': False, 'Casilla 39': False, 'Casilla 40': False, 'Casilla 41': False, 'Casilla 42': False, 'Casilla 43': True, 'Casilla 44': True, 'Casilla 45': True, 'Casilla 46': False, 'Casilla 47': False, 'Casilla 48': True, 'Casilla 49': True, 'Casilla 50': False, 'Casilla 51': False}
+INFO:     192.168.17.209:52419 - "POST /api/scanner/analizar HTTP/1.1" 200 OK

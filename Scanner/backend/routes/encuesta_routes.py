@@ -1,9 +1,11 @@
+import cv2
 from flask import Blueprint, request, jsonify, send_file
+import numpy as np
 import pandas as pd
 from io import BytesIO
 from sqlalchemy import text
 from models import db
-
+from services.processor import procesar_encuesta_hibrida
 # Librerías para generación de PDF
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -230,3 +232,39 @@ def exportar_pdf(id_encuesta):
     except Exception as e:
         print("Error en exportar_pdf:", str(e))
         return jsonify({'error': str(e)}), 500
+    
+@encuesta_bp.route('/api/scanner/analizar', methods=['POST'])
+def analizar_imagen_encuesta():
+    try:
+        # verificar archivo enviado desde el frontend
+        if 'imagen' not in request.files:
+            return jsonify({'error': 'No se envió ninguna imagen en la petición.'}), 400
+        
+        archivo = request.files['imagen']
+        if archivo.filename == '':
+            return jsonify({'error': 'El archivo enviado no tiene nombre o está vacío.'}), 400
+
+        # leer a través de la memoria ram
+        file_bytes = np.frombuffer(archivo.read(), np.uint8)
+        img_original = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+        if img_original is None:
+            return jsonify({'error': 'La imagen está corrupta, es ilegible o el formato no es soportado.'}), 400
+
+        # id_plantilla
+        id_plantilla = int(request.form.get('id_plantilla', 1))
+
+        # motor hibrido (paddle + openvc)
+        print("[API SCANNER] Procesando fotografía...")
+        datos_extraidos = procesar_encuesta_hibrida(img_original, id_plantilla)
+
+        # json
+        return jsonify({
+            'status': 'success',
+            'mensaje': 'Imagen escaneada y procesada correctamente.',
+            'data': datos_extraidos
+        }), 200
+
+    except Exception as e:
+        print("Error en analizar_imagen_encuesta:", str(e))
+        return jsonify({'error': f'Error interno del motor escáner: {str(e)}'}), 500

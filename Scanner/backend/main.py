@@ -3,6 +3,10 @@ import os
 import traceback
 from typing import List, Optional, Union
 
+import cv2
+import numpy as np
+from services.processor import procesar_encuesta_hibrida
+
 import openpyxl
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +17,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
+from fastapi import UploadFile, File, Form, HTTPException
+from fastapi.responses import JSONResponse
 
 from routes.auth_routes import auth_router
 from routes.supervisor_routes import supervisor_bp
@@ -550,3 +556,31 @@ def eliminar_encuesta(registro_id: int):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8082, reload=True)
+    
+@app.post("/api/scanner/analizar")
+async def analizar_imagen_encuesta(
+    imagen: UploadFile = File(...),
+    id_plantilla: int = Form(1)
+):
+    try:
+        if not imagen.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="El archivo no es una imagen.")
+
+        contents = await imagen.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img_original = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if img_original is None:
+            raise HTTPException(status_code=400, detail="La imagen está corrupta.")
+
+        print("[API SCANNER] Procesando fotografía con FastAPI...")
+        datos_extraidos = procesar_encuesta_hibrida(img_original, id_plantilla)
+
+        return JSONResponse(content={
+            "status": "success",
+            "data": datos_extraidos
+        })
+
+    except Exception as e:
+        print(f"Error en API Scanner: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

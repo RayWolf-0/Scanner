@@ -9,22 +9,21 @@ from models import db, RolUsuario, EstadoDocumento
 from routes.auth_routes import auth_bp
 from routes.encuesta_routes import encuesta_bp
 
-# Módulos de rutas existentes
 from routes.vendedor_routes import vendedor_bp
 from routes.supervisor_routes import supervisor_bp
 
-# NUEVO: Importamos los Blueprints de Autenticación y Encuestas
 from routes.auth_routes import auth_bp
 from routes.encuesta_routes import encuesta_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 CORS(app)
 
-# 1. PRIMERO: Inicializar la base de datos con la app
+# iniciar
 db.init_app(app)
 
-# 2. SEGUNDO: Configuración obligatoria para evitar bloqueos (WAL mode) en SQLite
+# evita bloqueos con sqlite
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     if isinstance(dbapi_connection, sqlite3.Connection):
@@ -33,11 +32,11 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.close()
 
-# 3. TERCERO: Registro de Blueprints
+# blueprints
 app.register_blueprint(vendedor_bp)
 app.register_blueprint(supervisor_bp)
 
-# NUEVO: Registramos los nuevos Blueprints
+# nuevos
 app.register_blueprint(auth_bp)
 app.register_blueprint(encuesta_bp)
 
