@@ -7,6 +7,7 @@ import EncuestaPDF from '../Components/EncuestaPDF';
 const RellenarEncuesta = ({ onGuardadoExitoso }) => {
     const fileInputRef = useRef(null);
     const [isScanning, setIsScanning] = useState(false);
+    const [progreso, setProgreso] = useState(0); // Estado para la barra de progreso
 
     const [formData, setFormData] = useState({
         nombre_empresa: '',
@@ -43,14 +44,13 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
     // funcion para bajarle el peso a la imagen usando canvas
     const comprimirImagen = (file) => {
         return new Promise((resolve) => {
-            const reader = new FileReader();
+            const reader = new FileReader(); 
             reader.readAsDataURL(file);
             reader.onload = (event) => {
                 const img = new Image();
                 img.src = event.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // resolucion maxima para que no pese tanto pero el ocr lea bien
                     const MAX_WIDTH = 1200;
                     const MAX_HEIGHT = 1200;
                     let width = img.width;
@@ -91,6 +91,12 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
         if (!fileOriginal) return;
 
         setIsScanning(true);
+        setProgreso(10);
+
+        // Simulador de barra de progreso fluida
+        const intervalo = setInterval(() => {
+            setProgreso((prev) => (prev >= 85 ? 85 : prev + 15));
+        }, 600);
         
         try {
             const fileComprimido = await comprimirImagen(fileOriginal);
@@ -108,21 +114,43 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
 
             const result = await response.json();
 
+            clearInterval(intervalo);
+            setProgreso(100);
+
             if (result.status === 'success' && result.data) {
                 const apiData = result.data;
                 
                 setFormData((prev) => {
                     const newData = { ...prev };
                     
-                    // 1. Mapear datos de texto con seguridad
+                    // 1. Mapear datos de texto y LIMPIEZA
                     if (apiData.nombre_empresa) newData.nombre_empresa = apiData.nombre_empresa.trim();
-                    if (apiData.rut_empresa) newData.rut_empresa = apiData.rut_empresa.trim();
                     if (apiData.nombre_encuestado) newData.nombre_encuestado = apiData.nombre_encuestado.trim();
                     if (apiData.cargo) newData.cargo = apiData.cargo.trim();
-                    if (apiData.fecha) newData.fecha = apiData.fecha.trim();
-                    if (apiData.telefono) newData.telefono = apiData.telefono.trim();
-                    if (apiData.correo) newData.correo = apiData.correo.trim();
+                    if (apiData.fecha) {
+                        let fCruda = apiData.fecha.replace(/\s+/g, '').replace(/\//g, '-');
+                        let partes = fCruda.split('-');
+                        if (partes.length === 3 && partes[0].length <= 2) {
+                            newData.fecha = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                        } else {
+                            newData.fecha = fCruda;
+                        }
+                    }
+                    if (apiData.telefono) newData.telefono = apiData.telefono.replace(/\D/g, ''); // Solo números
+                    
+                    // correo
+                    if (apiData.correo) newData.correo = apiData.correo.replace(/\s+/g, '');
                     if (apiData.observaciones) newData.obs_recomen = apiData.observaciones.trim();
+
+                    // rut, agrega el guión automático
+                    if (apiData.rut_empresa) {
+                        let rutCrudo = apiData.rut_empresa.replace(/[^0-9Kk]/g, '').toUpperCase();
+                        if (rutCrudo.length >= 8 && !rutCrudo.includes('-')) {
+                            newData.rut_empresa = rutCrudo.slice(0, -1) + '-' + rutCrudo.slice(-1);
+                        } else {
+                            newData.rut_empresa = rutCrudo;
+                        }
+                    }
 
                     // Traductor exacto de casillas
                     const diccionarioCasillas = {
@@ -195,12 +223,12 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                         'Casilla 51': { campo: 'red_social_sigue', valor: 'Pinterest' },
                         'Casilla 52': { campo: 'red_social_sigue', valor: 'Ninguna' },
 
-                        // Correo Informativo (SI / NO)
+                        // Correo Informativo
                         'Casilla 53': { campo: 'correo_informativo', valor: 'SI' },
                         'Casilla 54': { campo: 'correo_informativo', valor: 'NO' }
                     };
 
-                    // Limpiamos los arrays de redes sociales antes de llenarlos para que no se dupliquen
+                    // Limpiar arrays para que no se dupliquen
                     newData.red_social_usa = [];
                     newData.red_social_sigue = [];
 
@@ -223,15 +251,24 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                     return newData;
                 });
                 
-                alert("¡Planilla escaneada con éxito! Por favor revisa los datos antes de guardar.");
+                setTimeout(() => {
+                    alert("¡Planilla escaneada con éxito! Por favor revisa los datos antes de guardar.");
+                    setProgreso(0);
+                    setIsScanning(false);
+                }, 500);
+
             } else {
                 alert("Error al escanear: " + (result.error || result.mensaje));
+                setProgreso(0);
+                setIsScanning(false);
             }
         } catch (error) {
+            clearInterval(intervalo);
+            setProgreso(0);
+            setIsScanning(false);
             console.error("Error de conexión con el escáner:", error);
             alert("Ocurrió un error al intentar comunicarse con el motor inteligente.");
         } finally {
-            setIsScanning(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
@@ -286,19 +323,15 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
 
             // filtros estrictos de caracteres
             if (name === 'rut_empresa') {
-                // bloquea puntos y comas
                 valorProcesado = value.replace(/[.,]/g, '');
             }
             else if (name === 'telefono') {
-                // \D bloquea todo lo que no sea número (incluye puntos y comas)
                 valorProcesado = value.replace(/\D/g, '');
             }
             else if (name === 'nombre_empresa' || name === 'nombre_encuestado') {
-                // bloquea números, puntos y comas
                 valorProcesado = value.replace(/[0-9.,]/g, '');
             }
             else if (name === 'cargo') {
-                // bloquea puntos y comas
                 valorProcesado = value.replace(/[.,]/g, '');
             }
 
@@ -464,6 +497,14 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                     >
                         {isScanning ? 'Analizando imagen con IA...' : 'Tomar Foto o Subir Archivo'}
                     </button>
+
+                    {/* BARRA DE PROGRESO */}
+                    {isScanning && (
+                        <div className="progress-container" style={{ marginTop: '15px', width: '100%', backgroundColor: '#cbd5e0', borderRadius: '8px', overflow: 'hidden', height: '22px', position: 'relative' }}>
+                            <div className="progress-bar" style={{ width: `${progreso}%`, height: '100%', background: 'linear-gradient(90deg, #3182ce, #63b3ed)', transition: 'width 0.4s ease' }}></div>
+                            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: '0.85rem', fontWeight: 'bold', color: '#1a202c', lineHeight: '22px' }}>{progreso}% Procesando</span>
+                        </div>
+                    )}
                 </section>
 
                 <section className="form-section">

@@ -53,11 +53,11 @@ class OCRService:
         datos_extraidos = {
             "nombre_empresa": cls._buscar_patron(r"(?:Nombre\s*Empresa|Empresa)[:\s]*([^\n\r]+)", texto_completo),
             "rut_empresa": cls._buscar_patron(r"(?:RUT\s*Empresa|RUT|RUN)[:\s]*([0-9Kk\-\.]+)", texto_completo),
-            "nombre_encuestado": cls._buscar_patron(r"Encuestado\(a\)[\s\n]*([A-Za-zÁÉÍÓÚáéíóú]+)", texto_completo),
+            "nombre_encuestado": cls._buscar_patron(r"Encuestado\s*\(\s*a\s*\)[\s:]*([^\n\r]+)", texto_completo),
             "cargo": cls._buscar_patron(r"Cargo[:\s]*([^\n\r]+)", texto_completo),
-            "correo": cls._buscar_patron(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", texto_completo),
+            "correo": cls._buscar_patron(r"([a-zA-Z0-9_.+-_@-]+\s*@\s*[a-zA-Z0-9-]+\s*\.\s*[a-zA-Z0-9-.]+)", texto_completo),
             "telefono": cls._buscar_patron(r"Tel[eé]fono[:\s]*([0-9\+]+)", texto_completo),
-            "fecha": cls._buscar_patron(r"Fecha[:\s]*([0-9\-\/]+)", texto_completo),
+            "fecha": cls._buscar_patron(r"Fecha[:\s]*([0-9\-\/\s]+)", texto_completo),
             "observaciones": cls._buscar_patron(r"(?:Observaciones y Recomendaciones|Observaciones)[:\s]*(.*)", texto_completo)
         }
         return datos_extraidos
