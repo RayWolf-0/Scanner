@@ -1,5 +1,5 @@
 nohup: no se tendrá en cuenta la entrada
-INFO:     Started server process [123964]
+INFO:     Started server process [127255]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8082 (Press CTRL+C to quit)
@@ -19,22 +19,6 @@ which: no ccache in (/home/ctest/.vscode-server/data/User/globalStorage/github.c
 [API SCANNER] Procesando fotografía con FastAPI...
 [SCANNER] Iniciando extracción de texto...
 [OCR TEXTO CAPTURADO EXITOSAMENTE]
-[SCANNER] Evaluando casillas con mapeo seguro por filas espaciales independientes...
-[LIKERT FILA] Casilla 2 marcado (0.3056)
-[LIKERT FILA] Casilla 5 marcado (0.2061)
-[LIKERT FILA] Casilla 9 marcado (0.1491)
-[LIKERT FILA] Casilla 13 marcado (0.2127)
-[LIKERT FILA] Casilla 18 marcado (0.1111)
-[LIKERT FILA] Casilla 21 marcado (0.1608)
-[LIKERT FILA] Casilla 26 marcado (0.0485)
-[LIKERT FILA] Casilla 29 marcado (0.3421)
-[LIKERT FILA] Casilla 33 marcado (0.1784)
-[REDES SOCIALES] Casilla 43 marcado (0.1357)
-[REDES SOCIALES] Casilla 44 marcado (0.0949)
-[REDES SOCIALES] Casilla 45 marcado (0.2140)
-[REDES SOCIALES] Casilla 47 marcado (0.1453)
-[REDES SOCIALES] Casilla 48 marcado (0.1550)
-[REDES SOCIALES] Casilla 49 marcado (0.1354)
-[BINARIO] Casilla 50 marcado (0.2500)
-[ANALISIS EXITOSO] Extracción finalizada correctamente.
-INFO:     192.168.17.209:63931 - "POST /api/scanner/analizar HTTP/1.1" 200 OK
+[SCANNER] Alineando imagen y buscando Checkboxes...
+[ANALISIS EXITOSO] Datos correctamente extraidos: {'nombre_empresa': 'TeckboiT', 'rut_empresa': '123456789', 'nombre_encuestado': 'LyA', 'cargo': 'OPERARIO', 'correo': 'hya @gmail.com', 'telefono': '99999999', 'fecha': '31-07-2026', 'observaciones': 'Esto esta funcionando Correctament', 'Casilla 1': True, 'Casilla 2': True, 'Casilla 3': True, 'Casilla 4': True, 'Casilla 5': True, 'Casilla 6': True, 'Casilla 7': True, 'Casilla 8': True, 'Casilla 9': True, 'Casilla 10': True, 'Casilla 11': True, 'Casilla 12': True, 'Casilla 13': True, 'Casilla 14': True, 'Casilla 15': True, 'Casilla 16': True, 'Casilla 17': True, 'Casilla 18': True, 'Casilla 19': True, 'Casilla 20': True, 'Casilla 21': True, 'Casilla 22': True, 'Casilla 23': True, 'Casilla 24': True, 'Casilla 25': True, 'Casilla 26': True, 'Casilla 27': True, 'Casilla 28': True, 'Casilla 29': True, 'Casilla 30': True, 'Casilla 31': True, 'Casilla 32': False, 'Casilla 33': True, 'Casilla 34': True, 'Casilla 35': True, 'Casilla 36': True, 'Casilla 37': True, 'Casilla 38': True, 'Casilla 39': True, 'Casilla 40': True, 'Casilla 41': True, 'Casilla 42': True, 'Casilla 43': True, 'Casilla 44': True, 'Casilla 45': True, 'Casilla 46': False, 'Casilla 47': True, 'Casilla 48': True, 'Casilla 49': True, 'Casilla 50': True, 'Casilla 51': True}
+INFO:     192.168.17.209:62627 - "POST /api/scanner/analizar HTTP/1.1" 200 OK
