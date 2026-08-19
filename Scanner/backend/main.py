@@ -12,9 +12,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator, ConfigDict
-from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
 from fastapi import UploadFile, File, Form, HTTPException
@@ -377,8 +375,6 @@ def obtener_detalle_encuesta(registro_id: int):
 def listar_encuestas():
     db = SessionLocal()
     try:
-        # ¡ESTA ES LA CONSULTA CORREGIDA! 
-        # Ahora FastAPI devolverá los nombres igual que la versión de Flask
         query = text("""
             SELECT 
                 e.*, 
