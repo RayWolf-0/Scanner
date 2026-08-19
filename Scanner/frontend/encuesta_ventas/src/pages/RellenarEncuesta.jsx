@@ -103,7 +103,7 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
             const scanData = new FormData();
             scanData.append("imagen", fileComprimido);
 
-            const response = await fetch("http://192.168.17.72:8082/api/scanner/analizar", {
+            const response = await fetch("/api/scanner/analizar", {
                 method: "POST",
                 body: scanData,
             });

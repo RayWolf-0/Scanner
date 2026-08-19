@@ -566,15 +566,20 @@ async def analizar_imagen_encuesta(
         if not imagen.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="El archivo no es una imagen.")
 
-        contents = await imagen.read()
-        nparr = np.frombuffer(contents, np.uint8)
+        # Leer bytes crudos (preserva EXIF para corrección de orientación)
+        raw_bytes = await imagen.read()
+        
+        # Decodificar la imagen para OpenCV
+        nparr = np.frombuffer(raw_bytes, np.uint8)
         img_original = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if img_original is None:
             raise HTTPException(status_code=400, detail="La imagen está corrupta.")
 
-        print("[API SCANNER] Procesando fotografía con FastAPI...")
-        datos_extraidos = procesar_encuesta_hibrida(img_original, id_plantilla)
+        print(f"[API SCANNER] Procesando fotografía ({img_original.shape[1]}x{img_original.shape[0]})...")
+        
+        # Pasar raw_bytes para que el procesador pueda corregir EXIF
+        datos_extraidos = procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=raw_bytes)
 
         return JSONResponse(content={
             "status": "success",
@@ -583,4 +588,5 @@ async def analizar_imagen_encuesta(
 
     except Exception as e:
         print(f"Error en API Scanner: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
