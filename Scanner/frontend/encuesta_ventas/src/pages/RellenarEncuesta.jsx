@@ -154,23 +154,23 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
 
                     // Traductor exacto de casillas
                     const diccionarioCasillas = {
-                        // 1. Evaluación de Servicios Entregados
+                    // 1. Evaluación de Servicios Entregados
                         'Casilla 1': { campo: 'pedidos_completos', valor: 'Siempre >90%' },
                         'Casilla 2': { campo: 'pedidos_completos', valor: 'Generalmente 65%-89%' },
                         'Casilla 3': { campo: 'pedidos_completos', valor: 'Rara vez 40%-64%' },
                         'Casilla 4': { campo: 'pedidos_completos', valor: 'Nunca <40%' },
-                        
+
                         'Casilla 5': { campo: 'pedidos_rapidos', valor: 'Siempre >90%' },
                         'Casilla 6': { campo: 'pedidos_rapidos', valor: 'Generalmente 65%-89%' },
                         'Casilla 7': { campo: 'pedidos_rapidos', valor: 'Rara vez 40%-64%' },
                         'Casilla 8': { campo: 'pedidos_rapidos', valor: 'Nunca <40%' },
-                        
+
                         'Casilla 9': { campo: 'respuestas_oportunas', valor: 'Siempre >90%' },
                         'Casilla 10': { campo: 'respuestas_oportunas', valor: 'Generalmente 65%-89%' },
                         'Casilla 11': { campo: 'respuestas_oportunas', valor: 'Rara vez 40%-64%' },
                         'Casilla 12': { campo: 'respuestas_oportunas', valor: 'Nunca <40%' },
 
-                        // 2. Evaluación de Productos Comprados
+                    // 2. Evaluación de Productos Comprados
                         'Casilla 13': { campo: 'producto_bien_presentado', valor: 'Siempre >90%' },
                         'Casilla 14': { campo: 'producto_bien_presentado', valor: 'Generalmente 65%-89%' },
                         'Casilla 15': { campo: 'producto_bien_presentado', valor: 'Rara vez 40%-64%' },
@@ -181,52 +181,48 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                         'Casilla 19': { campo: 'producto_buena_calidad', valor: 'Rara vez 40%-64%' },
                         'Casilla 20': { campo: 'producto_buena_calidad', valor: 'Nunca <40%' },
 
-                        'Casilla 21': { campo: 'recibe_informacion', valor: 'Siempre >90%' },
-                        'Casilla 22': { campo: 'recibe_informacion', valor: 'Generalmente 65%-89%' },
-                        'Casilla 23': { campo: 'recibe_informacion', valor: 'Rara vez 40%-64%' },
-                        'Casilla 24': { campo: 'recibe_informacion', valor: 'Nunca <40%' },
+                        'Casilla 21': { campo: 'informacion_productos_nuevos', valor: 'Siempre >90%' },
+                        'Casilla 22': { campo: 'informacion_productos_nuevos', valor: 'Generalmente 65%-89%' },
+                        'Casilla 23': { campo: 'informacion_productos_nuevos', valor: 'Rara vez 40%-64%' },
+                        'Casilla 24': { campo: 'informacion_productos_nuevos', valor: 'Nunca <40%' },
 
-                        'Casilla 25': { campo: 'informacion_productos_nuevos', valor: 'Siempre >90%' },
-                        'Casilla 26': { campo: 'informacion_productos_nuevos', valor: 'Generalmente 65%-89%' },
-                        'Casilla 27': { campo: 'informacion_productos_nuevos', valor: 'Rara vez 40%-64%' },
-                        'Casilla 28': { campo: 'informacion_productos_nuevos', valor: 'Nunca <40%' },
+                    // 3. Evaluación del Personal
+                        'Casilla 25': { campo: 'contacto_con_ejecutivo', valor: 'Siempre >90%' },
+                        'Casilla 26': { campo: 'contacto_con_ejecutivo', valor: 'Generalmente 65%-89%' },
+                        'Casilla 27': { campo: 'contacto_con_ejecutivo', valor: 'Rara vez 40%-64%' },
+                        'Casilla 28': { campo: 'contacto_con_ejecutivo', valor: 'Nunca <40%' },
 
-                        // 3. Evaluación del Personal
-                        'Casilla 29': { campo: 'contacto_con_ejecutivo', valor: 'Siempre >90%' },
-                        'Casilla 30': { campo: 'contacto_con_ejecutivo', valor: 'Generalmente 65%-89%' },
-                        'Casilla 31': { campo: 'contacto_con_ejecutivo', valor: 'Rara vez 40%-64%' },
-                        'Casilla 32': { campo: 'contacto_con_ejecutivo', valor: 'Nunca <40%' },
+                        'Casilla 29': { campo: 'calidad_atencion', valor: 'Siempre >90%' },
+                        'Casilla 30': { campo: 'calidad_atencion', valor: 'Generalmente 65%-89%' },
+                        'Casilla 31': { campo: 'calidad_atencion', valor: 'Rara vez 40%-64%' },
+                        'Casilla 32': { campo: 'calidad_atencion', valor: 'Nunca <40%' },
 
-                        'Casilla 33': { campo: 'calidad_atencion', valor: 'Siempre >90%' },
-                        'Casilla 34': { campo: 'calidad_atencion', valor: 'Generalmente 65%-89%' },
-                        'Casilla 35': { campo: 'calidad_atencion', valor: 'Rara vez 40%-64%' },
-                        'Casilla 36': { campo: 'calidad_atencion', valor: 'Nunca <40%' },
+                        'Casilla 33': { campo: 'personal_domina_informacion', valor: 'Siempre >90%' },
+                        'Casilla 34': { campo: 'personal_domina_informacion', valor: 'Generalmente 65%-89%' },
+                        'Casilla 35': { campo: 'personal_domina_informacion', valor: 'Rara vez 40%-64%' },
+                        'Casilla 36': { campo: 'personal_domina_informacion', valor: 'Nunca <40%' },
 
-                        'Casilla 37': { campo: 'personal_domina_informacion', valor: 'Siempre >90%' },
-                        'Casilla 38': { campo: 'personal_domina_informacion', valor: 'Generalmente 65%-89%' },
-                        'Casilla 39': { campo: 'personal_domina_informacion', valor: 'Rara vez 40%-64%' },
-                        'Casilla 40': { campo: 'personal_domina_informacion', valor: 'Nunca <40%' },
+                    // 4. Redes Sociales (¿Qué red social usa más?)
+                        'Casilla 37': { campo: 'red_social_usa', valor: 'Instagram' },
+                        'Casilla 38': { campo: 'red_social_usa', valor: 'Tiktok' },
+                        'Casilla 39': { campo: 'red_social_usa', valor: 'Facebook' },
+                        'Casilla 40': { campo: 'red_social_usa', valor: 'Linkedin' },
+                        'Casilla 41': { campo: 'red_social_usa', valor: 'Pinterest' },
+                        'Casilla 42': { campo: 'red_social_usa', valor: 'Ninguna' },
 
-                        // 4. Redes Sociales (¿Qué red social usa más?)
-                        'Casilla 41': { campo: 'red_social_usa', valor: 'Instagram' },
-                        'Casilla 42': { campo: 'red_social_usa', valor: 'Tiktok' },
-                        'Casilla 43': { campo: 'red_social_usa', valor: 'Facebook' },
-                        'Casilla 44': { campo: 'red_social_usa', valor: 'Linkedin' },
-                        'Casilla 45': { campo: 'red_social_usa', valor: 'Pinterest' },
-                        'Casilla 46': { campo: 'red_social_usa', valor: 'Ninguna' },
+                    // ¿Por dónde nos sigue? 
+                        'Casilla 43': { campo: 'red_social_sigue', valor: 'Instagram' },
+                        'Casilla 44': { campo: 'red_social_sigue', valor: 'Tiktok' },
+                        'Casilla 45': { campo: 'red_social_sigue', valor: 'Facebook' },
+                        'Casilla 47': { campo: 'red_social_sigue', valor: 'Linkedin' },
+                        'Casilla 48': { campo: 'red_social_sigue', valor: 'Pinterest' },
+                        'Casilla 49': { campo: 'red_social_sigue', valor: 'Ninguna' },
 
-                        // ¿Por dónde nos sigue?
-                        'Casilla 47': { campo: 'red_social_sigue', valor: 'Instagram' },
-                        'Casilla 48': { campo: 'red_social_sigue', valor: 'Tiktok' },
-                        'Casilla 49': { campo: 'red_social_sigue', valor: 'Facebook' },
-                        'Casilla 50': { campo: 'red_social_sigue', valor: 'Linkedin' },
-                        'Casilla 51': { campo: 'red_social_sigue', valor: 'Pinterest' },
-                        'Casilla 52': { campo: 'red_social_sigue', valor: 'Ninguna' },
-
-                        // Correo Informativo
-                        'Casilla 53': { campo: 'correo_informativo', valor: 'SI' },
-                        'Casilla 54': { campo: 'correo_informativo', valor: 'NO' }
+                    // Correo Informativo
+                        'Casilla 50': { campo: 'correo_informativo', valor: 'SI' },
+                        'Casilla 51': { campo: 'correo_informativo', valor: 'NO' }
                     };
+
 
                     // Limpiar arrays para que no se dupliquen
                     newData.red_social_usa = [];
@@ -403,7 +399,6 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
             { "Campo": "--- 2. EVALUACIÓN DE PRODUCTOS ---", "Valor": "" },
             { "Campo": "Producto Bien Presentado", "Valor": formData.producto_bien_presentado || '' },
             { "Campo": "Producto Buena Calidad", "Valor": formData.producto_buena_calidad || '' },
-            { "Campo": "Recibe Información Compras", "Valor": formData.recibe_informacion || '' },
             { "Campo": "Información Productos Nuevos", "Valor": formData.informacion_productos_nuevos || '' },
             {},
             { "Campo": "--- 3. EVALUACIÓN DEL PERSONAL ---", "Valor": "" },
@@ -611,14 +606,6 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                                 {opcionesEvaluacion.map((op, i) => (
                                     <td key={i}>
                                         <input type="radio" name="producto_buena_calidad" value={op.val} checked={formData.producto_buena_calidad === op.val} onChange={handleChange} required />
-                                    </td>
-                                ))}
-                            </tr>
-                            <tr>
-                                <td>Recibe información sobre sus compras</td>
-                                {opcionesEvaluacion.map((op, i) => (
-                                    <td key={i}>
-                                        <input type="radio" name="recibe_informacion" value={op.val} checked={formData.recibe_informacion === op.val} onChange={handleChange} required />
                                     </td>
                                 ))}
                             </tr>

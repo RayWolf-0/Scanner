@@ -12,7 +12,7 @@ DEBUG_DIR = os.path.join(BASE_DIR, 'storage')
 
 def _obtener_dimensiones_plantilla():
     #leer dimensiones de la plantilla de referencia
-    if os.path.exist(RUTA_PLANTILLA_IMG):
+    if os.path.exists(RUTA_PLANTILLA_IMG):
         img = cv2.imread(RUTA_PLANTILLA_IMG)
         if img is not None:
             h, w = img.shape[:2]
@@ -34,7 +34,7 @@ def corregir_orientacion_desde_bytes(raw_bytes):
         pil_img = ImageOps.exif_transpose(pil_img)
         if pil_img.mode != 'RGB':
             pil_img = pil_img.convert('RGB')
-        img = cv2.cvtColor(np.array(pil_img))
+        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_BAYER_BG2BGR)
     except Exception as e:
         print(f"[ORIENTACIÓN] no se pudo leer desde bytes: {e}")
         nparr = np.frombuffer(raw_bytes, np.uint8)
@@ -50,7 +50,7 @@ def auto_orientar_y_cargar(ruta_imagen):
     try:
         pil_img = Image.open(ruta_imagen)
         pil_img = ImageOps.exif_transpose(pil_img)
-        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_BAYER_BG2BGR)
+        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
     except Exception as e:
         print(f"advertencia al leer exif: {e}")
         img = cv2.imread(ruta_imagen)
@@ -329,7 +329,7 @@ def evaluar_checkbox_preciso(roi):
     h, w = gris.shape
 
 
-    m_h, m_w = int(h * 0.15), int(w * 0.15)
+    m_h, m_w = int(h * 0.35), int(w * 0.35)
     centro = gris[m_h: h - m_h, m_w: w - m_w]
 
     if centro.size == 0:
@@ -345,7 +345,7 @@ def evaluar_checkbox_preciso(roi):
     porcentaje = (pixeles_tinta / float(centro.size)) * 100.0
 
     if 3.0 < porcentaje < 40.0:
-        return True
+        return True #por si acaso 
 
     return False
 
@@ -353,14 +353,7 @@ def evaluar_checkbox_preciso(roi):
 #procesador
 
 def procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=None):
-    """
-    Motor híbrido: PaddleOCR (texto) + OpenCV (checkboxes).
-    
-    Args:
-        img_original: Imagen como array numpy BGR
-        id_plantilla: ID de la plantilla en la BD
-        raw_bytes: Bytes crudos originales (opcional, para corrección EXIF)
-    """
+
     from services.ocr_service import OCRService
 
     # Si tenemos bytes crudos, corregir orientación EXIF primero
@@ -372,11 +365,11 @@ def procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=None):
         # Al menos asegurar orientación portrait
         img_original = _asegurar_portrait(img_original)
 
-    # Paso 1: PaddleOCR extrae texto
+    #PaddleOCR extrae texto
     print("[SCANNER] Iniciando extracción de texto con PaddleOCR...")
     datos_texto = OCRService.procesar_encuesta_completa(img_original)
 
-    # Paso 2: Alinear imagen y leer checkboxes con OpenCV
+    #Alinear imagen y leer checkboxes con OpenCV
     print("[SCANNER] Alineando imagen y buscando Checkboxes...")
     img_alineada = alinear_imagen(img_original, guardar_debug=True)
     datos_checkboxes = {}
@@ -400,7 +393,7 @@ def procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=None):
 
             campos = cursor.fetchall()
 
-            # Debug: dibujar overlay de los checkboxes sobre la imagen alineada
+            #dibujar overlay de los checkboxes sobre la imagen alineada
             debug_overlay = img_alineada.copy()
 
             for nombre_campo, x, y, w, h in campos:
