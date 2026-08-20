@@ -1,0 +1,114 @@
+.loginWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: radial-gradient(circle at center, #2d3748 0%, #1a202c 100%);
+    width: 100%;
+    padding: 1rem;
+}
+
+.loginAppTitle {
+    font-size: 2.4rem;
+    color: var(--text-main);
+    margin-bottom: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    text-align: center;
+}
+
+.loginCard {
+    background-color: var(--bg-sidebar);
+    width: 100%;
+    max-width: 380px;
+    padding: 2.5rem 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.loginCard h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.loginField {
+    width: 100%;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.loginField label {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.loginField input {
+    width: 100%;
+    padding: 12px 14px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.loginField input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.loginBtn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+
+.loginBtn:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.loginError {
+    background-color: rgba(229, 62, 62, 0.15);
+    border: 1px solid var(--color-danger);
+    color: #feb2b2;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    width: 100%;
+    text-align: center;
+}
+
+.forgotPassword {
+    margin-top: 1.2rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.forgotPassword:hover {
+    color: var(--text-main);
+    text-decoration: underline;
+}

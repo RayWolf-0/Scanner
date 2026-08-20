@@ -1,15 +1,18 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { guardarEncuesta } from "../Api/encuestaApi";
-import * as XLSX from 'xlsx';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import EncuestaPDF from '../Components/EncuestaPDF'; 
 
+// modulos hooks y utils
+import { validarRut } from "../utils/surveyUtils";
+import { useScanner } from "../hooks/useScanner";
+
 const RellenarEncuesta = ({ onGuardadoExitoso }) => {
     const fileInputRef = useRef(null);
-    const [isScanning, setIsScanning] = useState(false);
-    const [progreso, setProgreso] = useState(0); // Estado para la barra de progreso
+    
+    const { procesarImagenEscaneada, isScanning, progreso } = useScanner();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = React.useState({
         nombre_empresa: '',
         rut_empresa: '',
         nombre_encuestado: '',
@@ -41,265 +44,17 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
         { label: 'Nunca <40%', val: 'Nunca <40%' },
     ];
 
-    // funcion para bajarle el peso a la imagen usando canvas
-    const comprimirImagen = (file) => {
-        return new Promise((resolve) => {
-            const reader = new FileReader(); 
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    const MAX_HEIGHT = 1200;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // comprimir a jpeg al 70% de calidad
-                    canvas.toBlob((blob) => {
-                        resolve(new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        }));
-                    }, 'image/jpeg', 0.7);
-                };
-            };
-        });
-    };
-
-    // funcion del scanner
     const handleFileChange = async (e) => {
         const fileOriginal = e.target.files[0];
         if (!fileOriginal) return;
 
-        setIsScanning(true);
-        setProgreso(10);
-
-        // Simulador de barra de progreso fluida
-        const intervalo = setInterval(() => {
-            setProgreso((prev) => (prev >= 85 ? 85 : prev + 15));
-        }, 600);
-        
-        try {
-            const fileComprimido = await comprimirImagen(fileOriginal);
-            const scanData = new FormData();
-            scanData.append("imagen", fileComprimido);
-
-            const response = await fetch("http://192.168.17.72:8082/api/scanner/analizar", {
-                method: "POST",
-                body: scanData,
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Error de red o servidor: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            clearInterval(intervalo);
-            setProgreso(100);
-
-            if (result.status === 'success' && result.data) {
-                const apiData = result.data;
-                
-                setFormData((prev) => {
-                    const newData = { ...prev };
-                    
-                    // 1. Mapear datos de texto y LIMPIEZA
-                    if (apiData.nombre_empresa) newData.nombre_empresa = apiData.nombre_empresa.trim();
-                    if (apiData.nombre_encuestado) newData.nombre_encuestado = apiData.nombre_encuestado.trim();
-                    if (apiData.cargo) newData.cargo = apiData.cargo.trim();
-                    if (apiData.fecha) {
-                        let fCruda = apiData.fecha.replace(/\s+/g, '').replace(/\//g, '-');
-                        let partes = fCruda.split('-');
-                        if (partes.length === 3 && partes[0].length <= 2) {
-                            newData.fecha = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-                        } else {
-                            newData.fecha = fCruda;
-                        }
-                    }
-                    if (apiData.telefono) newData.telefono = apiData.telefono.replace(/\D/g, ''); // Solo números
-                    
-                    // correo
-                    if (apiData.correo) newData.correo = apiData.correo.replace(/\s+/g, '');
-                    if (apiData.observaciones) newData.obs_recomen = apiData.observaciones.trim();
-
-                    // rut, agrega el guión automático
-                    if (apiData.rut_empresa) {
-                        let rutCrudo = apiData.rut_empresa.replace(/[^0-9Kk]/g, '').toUpperCase();
-                        if (rutCrudo.length >= 8 && !rutCrudo.includes('-')) {
-                            newData.rut_empresa = rutCrudo.slice(0, -1) + '-' + rutCrudo.slice(-1);
-                        } else {
-                            newData.rut_empresa = rutCrudo;
-                        }
-                    }
-
-                    // Traductor exacto de casillas
-                    const diccionarioCasillas = {
-                    // 1. Evaluación de Servicios Entregados
-                        'Casilla 1': { campo: 'pedidos_completos', valor: 'Siempre >90%' },
-                        'Casilla 2': { campo: 'pedidos_completos', valor: 'Generalmente 65%-89%' },
-                        'Casilla 3': { campo: 'pedidos_completos', valor: 'Rara vez 40%-64%' },
-                        'Casilla 4': { campo: 'pedidos_completos', valor: 'Nunca <40%' },
-
-                        'Casilla 5': { campo: 'pedidos_rapidos', valor: 'Siempre >90%' },
-                        'Casilla 6': { campo: 'pedidos_rapidos', valor: 'Generalmente 65%-89%' },
-                        'Casilla 7': { campo: 'pedidos_rapidos', valor: 'Rara vez 40%-64%' },
-                        'Casilla 8': { campo: 'pedidos_rapidos', valor: 'Nunca <40%' },
-
-                        'Casilla 9': { campo: 'respuestas_oportunas', valor: 'Siempre >90%' },
-                        'Casilla 10': { campo: 'respuestas_oportunas', valor: 'Generalmente 65%-89%' },
-                        'Casilla 11': { campo: 'respuestas_oportunas', valor: 'Rara vez 40%-64%' },
-                        'Casilla 12': { campo: 'respuestas_oportunas', valor: 'Nunca <40%' },
-
-                    // 2. Evaluación de Productos Comprados
-                        'Casilla 13': { campo: 'producto_bien_presentado', valor: 'Siempre >90%' },
-                        'Casilla 14': { campo: 'producto_bien_presentado', valor: 'Generalmente 65%-89%' },
-                        'Casilla 15': { campo: 'producto_bien_presentado', valor: 'Rara vez 40%-64%' },
-                        'Casilla 16': { campo: 'producto_bien_presentado', valor: 'Nunca <40%' },
-
-                        'Casilla 17': { campo: 'producto_buena_calidad', valor: 'Siempre >90%' },
-                        'Casilla 18': { campo: 'producto_buena_calidad', valor: 'Generalmente 65%-89%' },
-                        'Casilla 19': { campo: 'producto_buena_calidad', valor: 'Rara vez 40%-64%' },
-                        'Casilla 20': { campo: 'producto_buena_calidad', valor: 'Nunca <40%' },
-
-                        'Casilla 21': { campo: 'informacion_productos_nuevos', valor: 'Siempre >90%' },
-                        'Casilla 22': { campo: 'informacion_productos_nuevos', valor: 'Generalmente 65%-89%' },
-                        'Casilla 23': { campo: 'informacion_productos_nuevos', valor: 'Rara vez 40%-64%' },
-                        'Casilla 24': { campo: 'informacion_productos_nuevos', valor: 'Nunca <40%' },
-
-                    // 3. Evaluación del Personal
-                        'Casilla 25': { campo: 'contacto_con_ejecutivo', valor: 'Siempre >90%' },
-                        'Casilla 26': { campo: 'contacto_con_ejecutivo', valor: 'Generalmente 65%-89%' },
-                        'Casilla 27': { campo: 'contacto_con_ejecutivo', valor: 'Rara vez 40%-64%' },
-                        'Casilla 28': { campo: 'contacto_con_ejecutivo', valor: 'Nunca <40%' },
-
-                        'Casilla 29': { campo: 'calidad_atencion', valor: 'Siempre >90%' },
-                        'Casilla 30': { campo: 'calidad_atencion', valor: 'Generalmente 65%-89%' },
-                        'Casilla 31': { campo: 'calidad_atencion', valor: 'Rara vez 40%-64%' },
-                        'Casilla 32': { campo: 'calidad_atencion', valor: 'Nunca <40%' },
-
-                        'Casilla 33': { campo: 'personal_domina_informacion', valor: 'Siempre >90%' },
-                        'Casilla 34': { campo: 'personal_domina_informacion', valor: 'Generalmente 65%-89%' },
-                        'Casilla 35': { campo: 'personal_domina_informacion', valor: 'Rara vez 40%-64%' },
-                        'Casilla 36': { campo: 'personal_domina_informacion', valor: 'Nunca <40%' },
-
-                    // 4. Redes Sociales (¿Qué red social usa más?)
-                        'Casilla 37': { campo: 'red_social_usa', valor: 'Instagram' },
-                        'Casilla 38': { campo: 'red_social_usa', valor: 'Tiktok' },
-                        'Casilla 39': { campo: 'red_social_usa', valor: 'Facebook' },
-                        'Casilla 40': { campo: 'red_social_usa', valor: 'Linkedin' },
-                        'Casilla 41': { campo: 'red_social_usa', valor: 'Pinterest' },
-                        'Casilla 42': { campo: 'red_social_usa', valor: 'Ninguna' },
-
-                    // ¿Por dónde nos sigue? 
-                        'Casilla 43': { campo: 'red_social_sigue', valor: 'Instagram' },
-                        'Casilla 44': { campo: 'red_social_sigue', valor: 'Tiktok' },
-                        'Casilla 45': { campo: 'red_social_sigue', valor: 'Facebook' },
-                        'Casilla 47': { campo: 'red_social_sigue', valor: 'Linkedin' },
-                        'Casilla 48': { campo: 'red_social_sigue', valor: 'Pinterest' },
-                        'Casilla 49': { campo: 'red_social_sigue', valor: 'Ninguna' },
-
-                    // Correo Informativo
-                        'Casilla 50': { campo: 'correo_informativo', valor: 'SI' },
-                        'Casilla 51': { campo: 'correo_informativo', valor: 'NO' }
-                    };
-
-
-                    // Limpiar arrays para que no se dupliquen
-                    newData.red_social_usa = [];
-                    newData.red_social_sigue = [];
-
-                    // Recorrer el resultado del backend
-                    Object.keys(apiData).forEach(key => {
-                        if (key.startsWith('Casilla') && apiData[key] === true) {
-                            const traduccion = diccionarioCasillas[key];
-                            if (traduccion) {
-                                if (traduccion.campo === 'red_social_usa' || traduccion.campo === 'red_social_sigue') {
-                                    if (!newData[traduccion.campo].includes(traduccion.valor)) {
-                                        newData[traduccion.campo].push(traduccion.valor);
-                                    }
-                                } else {
-                                    newData[traduccion.campo] = traduccion.valor;
-                                }
-                            }
-                        }
-                    });
-
-                    return newData;
-                });
-                
-                setTimeout(() => {
-                    alert("¡Planilla escaneada con éxito! Por favor revisa los datos antes de guardar.");
-                    setProgreso(0);
-                    setIsScanning(false);
-                }, 500);
-
-            } else {
-                alert("Error al escanear: " + (result.error || result.mensaje));
-                setProgreso(0);
-                setIsScanning(false);
-            }
-        } catch (error) {
-            clearInterval(intervalo);
-            setProgreso(0);
-            setIsScanning(false);
-            console.error("Error de conexión con el escáner:", error);
-            alert("Ocurrió un error al intentar comunicarse con el motor inteligente.");
-        } finally {
-            if (fileInputRef.current) fileInputRef.current.value = "";
+        const datosEscaneados = await procesarImagenEscaneada(fileOriginal);
+        if (datosEscaneados) {
+            setFormData((prev) => ({ ...prev, ...datosEscaneados }));
+            alert("¡Planilla escaneada con éxito! Por favor revisa los datos antes de guardar.");
         }
-    };
-
-    // funcion para validar RUT
-    const validarRut = (rutCompleto) => {
-        if (!rutCompleto) return false;
-        // acepta numeros y k
-        const cleanRut = rutCompleto.replace(/[^0-9kK]/g, '').toUpperCase();
-        if (cleanRut.length < 2) return false;
-
-        const cuerpo = cleanRut.slice(0, -1);
-        const dv = cleanRut.slice(-1);
-
-        let suma = 0;
-        let multiplo = 2;
-
-        // calculo del rut
-        for (let i = 1; i <= cuerpo.length; i++) {
-            const index = multiplo * cleanRut.charAt(cuerpo.length - i);
-            suma = suma + index;
-            if (multiplo < 7) { 
-                multiplo = multiplo + 1; 
-            } else { 
-                multiplo = 2; 
-            }
-        }
-
-        const dvEsperado = 11 - (suma % 11);
-        let dvCalculado = dvEsperado.toString();
         
-        if (dvEsperado === 11) dvCalculado = "0";
-        if (dvEsperado === 10) dvCalculado = "K";
-
-        return dvCalculado === dv;
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleChange = (e) => {
@@ -311,25 +66,14 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                 const listaActualizada = checked
                     ? [...listaActual, value]
                     : listaActual.filter((item) => item !== value);
-
                 return { ...prev, [name]: listaActualizada };
             });
         } else {
             let valorProcesado = value;
-
-            // filtros estrictos de caracteres
-            if (name === 'rut_empresa') {
-                valorProcesado = value.replace(/[.,]/g, '');
-            }
-            else if (name === 'telefono') {
-                valorProcesado = value.replace(/\D/g, '');
-            }
-            else if (name === 'nombre_empresa' || name === 'nombre_encuestado') {
-                valorProcesado = value.replace(/[0-9.,]/g, '');
-            }
-            else if (name === 'cargo') {
-                valorProcesado = value.replace(/[.,]/g, '');
-            }
+            if (name === 'rut_empresa') valorProcesado = value.replace(/[.,]/g, '');
+            else if (name === 'telefono') valorProcesado = value.replace(/\D/g, '');
+            else if (name === 'nombre_empresa' || name === 'nombre_encuestado') valorProcesado = value.replace(/[0-9.,]/g, '');
+            else if (name === 'cargo') valorProcesado = value.replace(/[.,]/g, '');
 
             setFormData((prev) => ({ ...prev, [name]: valorProcesado }));
         }
@@ -351,26 +95,18 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // verificar el RUT antes de intentar guardarlo
         if (!validarRut(formData.rut_empresa)) {
             alert('El RUT ingresado no es válido. Por favor, verifíquelo antes de guardar.');
-            return; // detiene el envío si el RUT está mal
+            return;
         }
 
         try {
-            const datosConUsuario = {
-                ...formData,
-                id_usuario: idUsuarioActual || 3 
-            };
-
+            const datosConUsuario = { ...formData, id_usuario: idUsuarioActual || 3 };
             const result = await guardarEncuesta(datosConUsuario);
 
             if (result && (result.status === 'success' || result.id_encuesta)) {
                 alert('Encuesta guardada con éxito');
-
-                if (typeof onGuardadoExitoso === 'function') {
-                    onGuardadoExitoso();
-                }
+                if (typeof onGuardadoExitoso === 'function') onGuardadoExitoso();
             } else {
                 alert('Error al guardar: ' + (result?.error || 'ocurrió un problema'));
             }
@@ -379,48 +115,6 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
             alert('Error de conexión con el servidor');
         }
     };
-    
-    const handleGenerarExcel = () => {
-        const datosExcel = [
-            { "Campo": "--- DATOS DEL CLIENTE ---", "Valor": "" },
-            { "Campo": "Nombre Empresa", "Valor": formData.nombre_empresa || '' },
-            { "Campo": "RUT Empresa", "Valor": formData.rut_empresa || '' },
-            { "Campo": "Nombre Encuestado", "Valor": formData.nombre_encuestado || '' },
-            { "Campo": "Cargo", "Valor": formData.cargo || '' },
-            { "Campo": "Fecha", "Valor": formData.fecha || '' },
-            { "Campo": "Teléfono", "Valor": formData.telefono || '' },
-            { "Campo": "Correo", "Valor": formData.correo || '' },
-            {},
-            { "Campo": "--- 1. EVALUACIÓN DE SERVICIOS ---", "Valor": "" },
-            { "Campo": "Pedidos Completos", "Valor": formData.pedidos_completos || '' },
-            { "Campo": "Pedidos Rápidos (24-48 hrs)", "Valor": formData.pedidos_rapidos || '' },
-            { "Campo": "Respuestas Oportunas", "Valor": formData.respuestas_oportunas || '' },
-            {},
-            { "Campo": "--- 2. EVALUACIÓN DE PRODUCTOS ---", "Valor": "" },
-            { "Campo": "Producto Bien Presentado", "Valor": formData.producto_bien_presentado || '' },
-            { "Campo": "Producto Buena Calidad", "Valor": formData.producto_buena_calidad || '' },
-            { "Campo": "Información Productos Nuevos", "Valor": formData.informacion_productos_nuevos || '' },
-            {},
-            { "Campo": "--- 3. EVALUACIÓN DEL PERSONAL ---", "Valor": "" },
-            { "Campo": "Contacto con Ejecutivo", "Valor": formData.contacto_con_ejecutivo || '' },
-            { "Campo": "Calidad de Atención", "Valor": formData.calidad_atencion || '' },
-            { "Campo": "Personal Domina Información", "Valor": formData.personal_domina_informacion || '' },
-            {},
-            { "Campo": "--- 4. REDES SOCIALES ---", "Valor": "" },
-            { "Campo": "Red Social que más usa", "Valor": Array.isArray(formData.red_social_usa) ? formData.red_social_usa.join(', ') : '' },
-            { "Campo": "Red Social por donde nos sigue", "Valor": Array.isArray(formData.red_social_sigue) ? formData.red_social_sigue.join(', ') : '' },
-            { "Campo": "Recibe Correo Informativo", "Valor": formData.correo_informativo || '' },
-            {},
-            { "Campo": "--- OBSERVACIONES Y RECOMENDACIONES ---", "Valor": "" },
-            { "Campo": "Observaciones", "Valor": formData.obs_recomen || '' }
-        ];
-
-        const worksheet = XLSX.utils.json_to_sheet(datosExcel);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Encuesta");
-
-        XLSX.writeFile(workbook, `Encuesta_${formData.nombre_empresa || 'Cliente'}.xlsx`);
-    }; 
 
     const datosParaPDF = {
         empresa: formData.nombre_empresa,
@@ -459,17 +153,16 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
             </header>
 
             <form id="encuesta-form-container" onSubmit={handleSubmit} className="survey-form">
-
-                {/* apartado del scanner */}
-                <section className="form-section" style={{ backgroundColor: '#eef2f7', border: '2px dashed #007bff', textAlign: 'center', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h3>Escáner de Planillas</h3>
-                    <p style={{ fontSize: '14px', color: '#555', marginBottom: '15px' }}>
+                {/* apartado del scanner adaptado al diseño oscuro */}
+                <section className="form-section" style={{ backgroundColor: 'var(--bg-card, #2d3748)', border: '2px dashed var(--color-accent, #4299e1)', textAlign: 'center', padding: '25px', borderRadius: '12px', marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ color: 'var(--text-main, #f7fafc)' }}>Escáner de Planillas</h3>
+                    <p style={{ fontSize: '14px', color: 'var(--text-muted, #a0aec0)', marginBottom: '15px' }}>
                         Sube una fotografía de la encuesta física y la Inteligencia Artificial llenará los datos por ti.
                     </p>
                     <input 
                         type="file" 
                         accept="image/*" 
-                        capture="environment" // habilita la camara en moviles
+                        capture="environment"
                         ref={fileInputRef} 
                         style={{ display: 'none' }} 
                         onChange={handleFileChange}
@@ -479,25 +172,19 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                         onClick={() => fileInputRef.current.click()} 
                         disabled={isScanning}
                         style={{ 
-                            padding: '12px 24px', 
-                            fontSize: '15px', 
-                            fontWeight: 'bold',
-                            borderRadius: '6px', 
-                            cursor: isScanning ? 'not-allowed' : 'pointer', 
-                            backgroundColor: isScanning ? '#6c757d' : '#007bff', 
-                            color: 'white', 
-                            border: 'none',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            padding: '12px 24px', fontSize: '15px', fontWeight: 'bold',
+                            borderRadius: '6px', cursor: isScanning ? 'not-allowed' : 'pointer', 
+                            backgroundColor: isScanning ? '#4a5568' : 'var(--color-primary, #3182ce)', 
+                            color: 'white', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
                         }}
                     >
                         {isScanning ? 'Analizando imagen con IA...' : 'Tomar Foto o Subir Archivo'}
                     </button>
 
-                    {/* BARRA DE PROGRESO */}
                     {isScanning && (
-                        <div className="progress-container" style={{ marginTop: '15px', width: '100%', backgroundColor: '#cbd5e0', borderRadius: '8px', overflow: 'hidden', height: '22px', position: 'relative' }}>
+                        <div className="progress-container" style={{ marginTop: '15px', width: '100%', backgroundColor: 'var(--bg-main, #1a202c)', borderRadius: '8px', overflow: 'hidden', height: '22px', position: 'relative', border: '1px solid var(--border-color, #4a5568)' }}>
                             <div className="progress-bar" style={{ width: `${progreso}%`, height: '100%', background: 'linear-gradient(90deg, #3182ce, #63b3ed)', transition: 'width 0.4s ease' }}></div>
-                            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: '0.85rem', fontWeight: 'bold', color: '#1a202c', lineHeight: '22px' }}>{progreso}% Procesando</span>
+                            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: '0.85rem', fontWeight: 'bold', color: '#f7fafc', lineHeight: '22px' }}>{progreso}% Procesando</span>
                         </div>
                     )}
                 </section>
@@ -514,9 +201,9 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                                 RUT Empresa (Ej: 12345678-9):
                                 {formData.rut_empresa && (
                                     validarRut(formData.rut_empresa) ? (
-                                        <span style={{ color: '#28a745', fontSize: '13px', fontWeight: 'bold' }}>🟢</span>
+                                        <span style={{ color: '#48bb78', fontSize: '13px', fontWeight: 'bold' }}>🟢</span>
                                     ) : (
-                                        <span style={{ color: '#dc3545', fontSize: '13px', fontWeight: 'bold' }}>🔴 RUT incorrecto</span>
+                                        <span style={{ color: '#f56565', fontSize: '13px', fontWeight: 'bold' }}>🔴 RUT incorrecto</span>
                                     )
                                 )}
                             </label>
@@ -661,19 +348,12 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
 
                 <section className="form-section">
                     <h3>4. Redes Sociales (puede marcar más de una opción)</h3>
-
                     <div className="form-group" style={{ marginBottom: '15px' }}>
                         <label>¿Qué red social es la que más usa?</label>
                         <div className="checkbox-group">
                             {opcionesRedes.map((red) => (
                                 <label key={`usa-${red}`}>
-                                    <input
-                                        type="checkbox"
-                                        name="red_social_usa"
-                                        value={red}
-                                        checked={formData.red_social_usa.includes(red)}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="checkbox" name="red_social_usa" value={red} checked={formData.red_social_usa.includes(red)} onChange={handleChange} />
                                     {red}
                                 </label>
                             ))}
@@ -685,13 +365,7 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                         <div className="checkbox-group">
                             {opcionesRedes.map((red) => (
                                 <label key={`sigue-${red}`}>
-                                    <input
-                                        type="checkbox"
-                                        name="red_social_sigue"
-                                        value={red}
-                                        checked={formData.red_social_sigue.includes(red)}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="checkbox" name="red_social_sigue" value={red} checked={formData.red_social_sigue.includes(red)} onChange={handleChange} />
                                     {red}
                                 </label>
                             ))}
@@ -702,24 +376,10 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
                         <label>Recibe nuestro correo informativo:</label>
                         <div className="checkbox-group">
                             <label>
-                                <input
-                                    type="radio"
-                                    name="correo_informativo"
-                                    value="SI"
-                                    checked={formData.correo_informativo === 'SI'}
-                                    onChange={handleChange}
-                                    required
-                                /> SI
+                                <input type="radio" name="correo_informativo" value="SI" checked={formData.correo_informativo === 'SI'} onChange={handleChange} required /> SI
                             </label>
                             <label>
-                                <input
-                                    type="radio"
-                                    name="correo_informativo"
-                                    value="NO"
-                                    checked={formData.correo_informativo === 'NO'}
-                                    onChange={handleChange}
-                                    required
-                                /> NO
+                                <input type="radio" name="correo_informativo" value="NO" checked={formData.correo_informativo === 'NO'} onChange={handleChange} required /> NO
                             </label>
                         </div>
                     </div>
@@ -727,16 +387,9 @@ const RellenarEncuesta = ({ onGuardadoExitoso }) => {
 
                 <section className="form-section">
                     <h3>Observaciones y Recomendaciones</h3>
-                    <textarea
-                        name="obs_recomen"
-                        rows="4"
-                        value={formData.obs_recomen}
-                        onChange={handleChange}
-                        style={{ width: '100%' }}
-                    />
+                    <textarea name="obs_recomen" rows="4" value={formData.obs_recomen} onChange={handleChange} style={{ width: '100%' }} />
                 </section>
 
-                {/* botones de acción */}
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', alignItems: 'stretch' }}>
                     <button type="submit" className="btn-submit" style={{ flex: 1, padding: '12px 15px', fontSize: '14px', borderRadius: '6px', textAlign: 'center', cursor: 'pointer' }}>
                         Guardar Encuesta

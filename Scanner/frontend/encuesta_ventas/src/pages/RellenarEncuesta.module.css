@@ -1,0 +1,29 @@
+.scannerContainer {
+    background-color: var(--bg-card);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    margin: 2rem 0;
+}
+
+.scannerContainer:hover {
+    border-color: var(--color-accent);
+    background-color: rgba(66, 153, 225, 0.04);
+}
+
+.scannerTitle {
+    color: var(--text-main);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.scannerText {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}

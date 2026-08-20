@@ -4,7 +4,6 @@ import Dashboard from './pages/Dashboard';
 import RellenarEncuesta from './pages/RellenarEncuesta';
 import Perfil from './pages/Perfil';
 import Historial from './pages/Historial';
-import Plantilla from './pages/Plantilla';
 import GestionUsuarios from './Components/GestionUsuarios';
 import './App.css';
 
@@ -59,8 +58,6 @@ function App() {
           <GestionUsuarios onVolver={() => setVistaActual('perfil')} />
         </LayoutConVolver>
       );
-    case 'plantilla':
-      return <LayoutConVolver><Plantilla /></LayoutConVolver>;
     case 'historial':
       return (
         <LayoutConVolver>

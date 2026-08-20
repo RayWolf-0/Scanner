@@ -3,21 +3,37 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash
+
+
+from database import SessionLocal
 
 supervisor_bp = APIRouter(prefix="/api/supervisor", tags=["Supervisor"])
 
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "instance", "scanner.db")
-DATABASE_URL = f"sqlite:///{DB_PATH}"
-
-engine = create_engine(DATABASE_URL, connect_args={"timeout": 30.0}, future=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
-
 class EstadoSchema(BaseModel):
     estado: str
+
+class UsuarioCreateSchema(BaseModel):
+    nombre: str
+    apellido: str
+    mail: str
+    run: str
+    user: str
+    contrasena: str
+    id_rol: int
+
+class UsuarioUpdateSchema(BaseModel):
+    nombre: str
+    apellido: str
+    mail: str
+    run: str
+    user: str
+    contrasena: Optional[str] = None  
+    id_rol: int
+
+#endpoint para el supervisor
 
 @supervisor_bp.get("/documentos")
 def listar_documentos():
@@ -47,7 +63,6 @@ def listar_documentos():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
 
 @supervisor_bp.put("/documentos/{id_documento}/estado")
 def cambiar_estado_documento(id_documento: int, payload: EstadoSchema):
@@ -90,7 +105,6 @@ def cambiar_estado_documento(id_documento: int, payload: EstadoSchema):
     finally:
         db.close()
 
-
 @supervisor_bp.get("/documentos/{id_documento}/pdf")
 def descargar_pdf_final(id_documento: int):
     """Permite descargar el PDF generado y procesado."""
@@ -109,7 +123,6 @@ def descargar_pdf_final(id_documento: int):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
 
 @supervisor_bp.get("/usuarios")
 def listar_usuarios():
@@ -140,22 +153,11 @@ def listar_usuarios():
     finally:
         db.close()
 
-
-class UsuarioCreateSchema(BaseModel):
-    nombre: str
-    apellido: str
-    mail: str
-    run: str
-    user: str
-    contrasena: str
-    id_rol: int
-
 @supervisor_bp.post("/usuarios/crear")
 def crear_usuario(payload: UsuarioCreateSchema):
     """Permite al supervisor crear un nuevo vendedor o supervisor."""
     db = SessionLocal()
     try:
-        # Verificar duplicados
         existente = db.execute(
             text("SELECT id_usuario FROM USUARIO WHERE mail = :mail OR user = :user OR run = :run"),
             {"mail": payload.mail, "user": payload.user, "run": payload.run}
@@ -195,21 +197,11 @@ def crear_usuario(payload: UsuarioCreateSchema):
     finally:
         db.close()
         
-class UsuarioUpdateSchema(BaseModel):
-    nombre: str
-    apellido: str
-    mail: str
-    run: str
-    user: str
-    contrasena: Optional[str] = None  # Opcional: solo se cambia si se escribe una nueva
-    id_rol: int
-
 @supervisor_bp.put("/usuarios/actualizar/{id_usuario}")
 def actualizar_usuario(id_usuario: int, payload: UsuarioUpdateSchema):
     """Permite al supervisor actualizar los datos de un usuario existente."""
     db = SessionLocal()
     try:
-        # Verificar que el usuario exista
         user_exist = db.execute(
             text("SELECT id_usuario FROM USUARIO WHERE id_usuario = :id"),
             {"id": id_usuario}
@@ -218,7 +210,6 @@ def actualizar_usuario(id_usuario: int, payload: UsuarioUpdateSchema):
         if not user_exist:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        # Verificar duplicados de mail, user o run en OTROS usuarios
         duplicado = db.execute(
             text("SELECT id_usuario FROM USUARIO WHERE (mail = :mail OR user = :user OR run = :run) AND id_usuario != :id"),
             {"mail": payload.mail, "user": payload.user, "run": payload.run, "id": id_usuario}
@@ -227,7 +218,6 @@ def actualizar_usuario(id_usuario: int, payload: UsuarioUpdateSchema):
         if duplicado:
             raise HTTPException(status_code=400, detail="El correo, nombre de usuario o RUN ya pertenecen a otro usuario")
 
-        # Si mandó contraseña nueva, la encriptamos; si no, mantenemos la anterior
         if payload.contrasena and payload.contrasena.strip() != "":
             hashed_password = generate_password_hash(payload.contrasena)
             db.execute(
@@ -286,7 +276,6 @@ def eliminar_usuario(id_usuario: int):
     """Permite al supervisor eliminar un usuario del sistema."""
     db = SessionLocal()
     try:
-        # Verificar que el usuario exista
         user = db.execute(
             text("SELECT id_usuario FROM USUARIO WHERE id_usuario = :id"),
             {"id": id_usuario}
@@ -295,7 +284,6 @@ def eliminar_usuario(id_usuario: int):
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        # OJO no se va a borrar si tiene documentos asociados
         db.execute(
             text("DELETE FROM USUARIO WHERE id_usuario = :id"),
             {"id": id_usuario}

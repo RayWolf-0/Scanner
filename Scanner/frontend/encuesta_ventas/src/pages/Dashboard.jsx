@@ -1,25 +1,26 @@
 import React from 'react';
+import styles from './Dashboard.module.css';
 
 const Dashboard = ({ onSelectOption, onLogout }) => {
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-content">
-        <h1 className="dashboard-title">Encuestas Tecbolt</h1>
+    <div className={styles.dashboardPage}>
+      <div className={styles.dashboardContent}>
+        <h1 className={styles.dashboardTitle}>Encuestas Tecbolt</h1>
         
-        <nav className="dashboard-menu">
-          <button className="menu-btn" onClick={() => onSelectOption('perfil')}>
+        <nav className={styles.dashboardMenu}>
+          <button className={styles.menuBtn} onClick={() => onSelectOption('perfil')}>
             Perfil
           </button>
           
-          <button className="menu-btn highlight" onClick={() => onSelectOption('rellenar')}>
+          <button className={`${styles.menuBtn} ${styles.highlight}`} onClick={() => onSelectOption('rellenar')}>
             Rellenar Encuesta
           </button>
           
-          <button className="menu-btn" onClick={() => onSelectOption('historial')}>
+          <button className={styles.menuBtn} onClick={() => onSelectOption('historial')}>
             Historial de Encuestas
           </button>
           
-          <button className="menu-btn logout" onClick={onLogout}>
+          <button className={`${styles.menuBtn} ${styles.logout}`} onClick={onLogout}>
             Cerrar Sesión
           </button>
         </nav>

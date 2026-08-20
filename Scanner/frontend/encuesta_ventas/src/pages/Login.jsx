@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginRequest } from '../Api/authApi';
+import styles from './Login.module.css';
 
 const Login = ({ onLoginSuccess }) => {
     const [usuario, setUsuario] = useState('');
@@ -24,16 +25,16 @@ const Login = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="login-wrapper">
-            <h1 className="login-app-title">Encuestas Tecbolt</h1>
+        <div className={styles.loginWrapper}>
+            <h1 className={styles.loginAppTitle}>Encuestas Tecbolt</h1>
             
-            <div className="login-card">
+            <div className={styles.loginCard}>
                 <h2>Login</h2>
 
-                {errormsg && <div className="login-error">{errormsg}</div>}
+                {errormsg && <div className={styles.loginError}>{errormsg}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="login-field">
+                    <div className={styles.loginField}>
                         <label>Usuario</label>
                         <input
                             type="text"
@@ -43,7 +44,7 @@ const Login = ({ onLoginSuccess }) => {
                         />
                     </div>
 
-                    <div className="login-field">
+                    <div className={styles.loginField}>
                         <label>Contraseña</label>
                         <input
                             type="password"
@@ -53,13 +54,13 @@ const Login = ({ onLoginSuccess }) => {
                         />
                     </div>
 
-                    <button type="submit" className="login-btn" disabled={cargando}>
+                    <button type="submit" className={styles.loginBtn} disabled={cargando}>
                         {cargando ? 'Ingresando...' : 'Ingresar'}
                     </button>
                 </form>
             </div>
         </div>
     );
-}
+};
 
 export default Login;

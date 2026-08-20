@@ -1,14 +1,22 @@
-from paddleocr import PaddleOCR
 import re
+import cv2
+from paddleocr import PaddleOCR
 
 class OCRService:
-    #Iniciar PAddleOCR
     _ocr_engine = None
+
     @classmethod
     def _get_ocr_engine(cls):
         if cls._ocr_engine is None:
-            cls._ocr_engine = PaddleOCR(lang="es", enable_mkldnn=False)
+            #parametros para mejor rendimiento
+            cls._ocr_engine = PaddleOCR(
+                lang="es", 
+                use_angle_cls=False,  
+                enable_mkldnn=True,   
+                cpu_threads=4 
+            )
         return cls._ocr_engine
+        
     @classmethod
     def _buscar_patron(cls, patron, texto, multilinea=False):
         flags = (re.IGNORECASE | re.DOTALL) if multilinea else re.IGNORECASE
@@ -19,10 +27,22 @@ class OCRService:
     def procesar_encuesta_completa(cls, img):
         if img is None:
             return {}
+        
+        # comprimir antes de leer
+        max_width = 900
+        h, w = img.shape[:2]
+        if w > max_width:
+            ratio = max_width / float(w)
+            nueva_dim = (max_width, int(h * ratio))
+            img_procesar = cv2.resize(img, nueva_dim, interpolation=cv2.INTER_AREA)
+        else:
+            img_procesar = img
+
         ocr = cls._get_ocr_engine()
         
         try:
-            resultado = ocr.ocr(img)
+            # imagen ligera
+            resultado = ocr.ocr(img_procesar)
         except Exception as e:
             print(f"[Error OCR] {e}")
             return {}

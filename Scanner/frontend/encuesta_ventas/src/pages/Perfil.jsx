@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styles from './Perfil.module.css';
 
 const NOMBRES_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -11,7 +12,6 @@ const parseFechaLocal = (fechaStr) => {
   return new Date(fechaStr);
 };
 
-// Función auxiliar para obtener el nombre del vendedor
 const getVendedorNombre = (e) => {
   if (!e) return 'Desconocido';
   if (e.nombre) return `${e.nombre} ${e.apellido || ''}`.trim();
@@ -50,7 +50,6 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     datosUsr?.mail || 
     'Usuario';
 
-  // Efecto para Cargar todas las encuestas
   useEffect(() => {
     const cargarEncuestas = async () => {
       try {
@@ -69,7 +68,6 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     }
   }, [usuario]);
 
-  // Efecto para Calcular las estadísticas del gráfico según el filtro
   useEffect(() => {
     const mesActualIndex = new Date().getMonth();
     const estructuraMeses = NOMBRES_MESES.slice(0, mesActualIndex + 1).map((mes) => ({
@@ -78,19 +76,16 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     }));
 
     if (encuestasGlobales.length > 0) {
-      // Filtrar según el rol y la selección
       const encuestasFiltradas = encuestasGlobales.filter((e) => {
         if (esSupervisor) {
           if (vendedorFiltro === 'todos') return true;
           return String(getVendedorNombre(e)) === String(vendedorFiltro);
         } else {
-          // El usuario común (vendedor) solo verá sus estadisticas
           if (!idUsuarioActual) return true;
           return Number(e.id_usuario) === Number(idUsuarioActual);
         }
       });
 
-      // Llenar datos del mes
       encuestasFiltradas.forEach((encuesta) => {
         if (encuesta.fecha) {
           const fechaObj = parseFechaLocal(encuesta.fecha); 
@@ -134,49 +129,40 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
     }
   };
 
-  // Obtener lista de vendedores únicos
   const vendedoresUnicos = Array.from(new Set(encuestasGlobales.map(getVendedorNombre))).filter(Boolean);
-
   const maxCantidad = statsMes.length > 0 ? Math.max(...statsMes.map((d) => d.cantidad), 1) : 1;
 
   return (
-    <div className="perfil-container">
-      <div className="perfil-card">
+    <div className={styles.perfilContainer}>
+      <div className={styles.perfilCard}>
         
-        <div className="perfil-header">
-          <div className="user-details">
-            <h2 className="user-fullname">
-              {nombreMostrado}
-            </h2>
-            <span className="user-username">
+        <div className={styles.perfilHeader}>
+          <div className={styles.userDetails}>
+            <h2 className={styles.userFullname}>{nombreMostrado}</h2>
+            <span className={styles.userUsername}>
               Rol: {esSupervisor ? 'Supervisor' : 'Vendedor'}
             </span>
           </div>
 
-          <button className="btn-logout-perfil" onClick={onLogout}>
+          <button className={styles.btnLogoutPerfil} onClick={onLogout}>
             Cerrar Sesión
           </button>
         </div>
 
-        <hr className="perfil-divider" />
+        <hr className={styles.perfilDivider} />
 
-        {/* Panel exclusivo para Supervisores */}
         {esSupervisor && (
           <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', color: '#fff' }}>Panel de Supervisión</h3>
             <p style={{ fontSize: '13px', color: '#aaa', margin: '0 0 12px 0' }}>
               Gestión de cuentas de vendedores y permisos del sistema.
             </p>
-            <button 
-              className="btn-accion btn-excel" 
-              onClick={onIrAGestion} 
-            >
+            <button className="btn-accion btn-excel" onClick={onIrAGestion}>
               Gestionar Usuarios
             </button>
           </div>
         )}
 
-        {/* Sección de Cambio de Contraseña */}
         <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#fff' }}>Cambiar Mi Contraseña</h3>
           <form onSubmit={handleCambiarPassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -207,14 +193,12 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
           </form>
         </div>
 
-        {/* Gráfico de Estadísticas por Mes */}
-        <div className="chart-section">
+        <div className={styles.chartSection}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h3 className="chart-title" style={{ margin: 0 }}>
+            <h3 className={styles.chartTitle} style={{ margin: 0 }}>
               Encuestas Realizadas {esSupervisor && vendedorFiltro !== 'todos' ? `por ${vendedorFiltro}` : 'por Mes'}
             </h3>
             
-            {/* Filtro para Supervisores */}
             {esSupervisor && (
               <select 
                 value={vendedorFiltro} 
@@ -229,19 +213,19 @@ const Perfil = ({ usuario, onLogout, onIrAGestion }) => {
             )}
           </div>
 
-          <div className="bar-chart-container">
+          <div className={styles.barChartContainer}>
             {statsMes.map((item, index) => {
               const porcentaje = (item.cantidad / maxCantidad) * 100;
               return (
-                <div key={index} className="bar-group">
-                  <span className="bar-value">{item.cantidad}</span>
-                  <div className="bar-wrapper">
+                <div key={index} className={styles.barGroup}>
+                  <span className={styles.barValue}>{item.cantidad}</span>
+                  <div className={styles.barWrapper}>
                     <div
-                      className="bar-fill"
+                      className={styles.barFill}
                       style={{ height: `${porcentaje}%` }}
                     />
                   </div>
-                  <span className="bar-label">{item.mes}</span>
+                  <span className={styles.barLabel}>{item.mes}</span>
                 </div>
               );
             })}

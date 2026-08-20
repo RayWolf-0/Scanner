@@ -1,0 +1,15 @@
+#Base de datos y archivos de instancia
+instance/
+*.db
+
+#Logs y salidas de pruebas
+*.log
+nohup.out
+test_output.txt
+
+#Caché de Python
+__pycache__/
+*.pyc
+
+#Archivos de configuración local
+config.py

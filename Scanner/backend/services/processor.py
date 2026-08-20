@@ -45,6 +45,7 @@ def corregir_orientacion_desde_bytes(raw_bytes):
     
     return _asegurar_portrait(img)
 
+
 def auto_orientar_y_cargar(ruta_imagen):
     #cargar imagen desde ruta con exif
     try:
@@ -60,14 +61,12 @@ def auto_orientar_y_cargar(ruta_imagen):
     
     return _asegurar_portrait(img)
 
-#alinear por capas
 
+#alinear por capas
 def _alinear_por_capas(img_original, guardar_debug=False):
-    #feature matching junto a orb hacia la planilla de referencia.
     if not os.path.exists(RUTA_PLANTILLA_IMG):
         print("[ALINEACION] no se encontró la planilla de referencia")
         return None
-    
     
     img_plantilla = cv2.imread(RUTA_PLANTILLA_IMG, cv2.IMREAD_GRAYSCALE)
     if img_plantilla is None:
@@ -76,48 +75,47 @@ def _alinear_por_capas(img_original, guardar_debug=False):
     h_dest, w_dest = img_plantilla.shape[:2]
     gray_foto = cv2.cvtColor(img_original, cv2.COLOR_BGR2GRAY)
 
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    gray_foto = clahe.apply(gray_foto)
     
-    SCALE_H = 1200 #resolución escogida para que no consuma ram al procesar la imagen el escaner
+    SCALE_H = 1200 
     ratio_plantilla = SCALE_H / float(h_dest)
     plantilla_small = cv2.resize(img_plantilla, None, fx=ratio_plantilla, fy=ratio_plantilla)
     
     ratio_foto = SCALE_H / float(gray_foto.shape[0])
     foto_small = cv2.resize(gray_foto, None, fx=ratio_foto, fy=ratio_foto)
     
-    #detector orb
-    orb = cv2.ORB_create(nfeatures=3000, scaleFactor=1.2, nlevels=8,
+    orb = cv2.ORB_create(nfeatures=5000, scaleFactor=1.2, nlevels=8,
                          edgeThreshold=15, patchSize=31)
     
     kp1, des1 = orb.detectAndCompute(foto_small, None)
     kp2, des2 = orb.detectAndCompute(plantilla_small, None)
     
     if des1 is None or des2 is None:
-        print(f"[ALINEACION] no se detectaron suficientes features")
+        print("[ALINEACION] no se detectaron suficientes features")
         return None
     
     if len(kp1) < 10 or len(kp2) < 110:
         print(f"[ALINEACION] features insuficientes: foto={len(kp1)}, plantilla={len(kp2)}")
         return None
     
-    #BFMatcher + ratio test (foto del test)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
     matches_raw = bf.knnMatch(des1, des2, k=2)
     
-    #aplicar ratio test
     buenas = []
     for pair in matches_raw:
         if len(pair) == 2:
             m, n = pair
             if m.distance < 0.75 * n.distance:
                 buenas.append(m)
+                
     print(f"[ALINEACION] feature matching: {len(buenas)} matches buenos de {len(matches_raw)} totales")
     
     MIN_MATCHES = 15
     if len(buenas) < MIN_MATCHES:
-        print(f"[ALINEACIONA]: insucifientes matches ({len(buenas)} < {MIN_MATCHES}), features matching descartado")
+        print(f"[ALINEACION]: insuficientes matches ({len(buenas)} < {MIN_MATCHES}), features matching descartado")
         return None
     
-    # Extraer puntos — convertir de coordenadas small - coordenadas originales
     pts_foto = np.float32([kp1[m.queryIdx].pt for m in buenas]).reshape(-1, 1, 2)
     pts_plantilla = np.float32([kp2[m.trainIdx].pt for m in buenas]).reshape(-1, 1, 2)
 
@@ -138,11 +136,10 @@ def _alinear_por_capas(img_original, guardar_debug=False):
         return None
     
     h_orig, w_orig = img_original.shape[:2]
-    MAX_WARP_DIM = 4000  # Dimensión máxima antes del warp
+    MAX_WARP_DIM = 4000
     if max(h_orig, w_orig) > MAX_WARP_DIM:
         scale_down = MAX_WARP_DIM / float(max(h_orig, w_orig))
         img_to_warp = cv2.resize(img_original, None, fx=scale_down, fy=scale_down)
-        # ajustar para nuevas dimensiones
         S = np.array([[scale_down, 0, 0], [0, scale_down, 0], [0, 0, 1]], dtype=np.float64)
         H_adjusted = H @ np.linalg.inv(S)
         warped = cv2.warpPerspective(img_to_warp, H_adjusted, (w_dest, h_dest))
@@ -153,13 +150,14 @@ def _alinear_por_capas(img_original, guardar_debug=False):
     if guardar_debug:
         try:
             debug_path = os.path.join(DEBUG_DIR, 'debug_feature_matches.jpg')
-            # Dibujar matches para depuración
             foto_small_bgr = cv2.cvtColor(foto_small, cv2.COLOR_GRAY2BGR)
             plantilla_small_bgr = cv2.cvtColor(plantilla_small, cv2.COLOR_GRAY2BGR)
+            
             if mask is not None:
                 matches_mask = mask.ravel().tolist()
             else:
                 matches_mask = None
+                
             img_matches = cv2.drawMatches(
                 foto_small_bgr, kp1, plantilla_small_bgr, kp2,
                 buenas, None,
@@ -175,6 +173,7 @@ def _alinear_por_capas(img_original, guardar_debug=False):
 
     return warped
 
+#busca los contornos de la imagen antes de poder alinearla
 def _alinear_por_contorno(img_original, guardar_debug=False):
     w_dest, h_dest = _obtener_dimensiones_plantilla()
 
@@ -184,12 +183,13 @@ def _alinear_por_contorno(img_original, guardar_debug=False):
     area_total = image_resized.shape[0] * image_resized.shape[1]
 
     gray = cv2.cvtColor(image_resized, cv2.COLOR_BGR2GRAY)
+    
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+    
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # Usar Canny edge detection 
     edged = cv2.Canny(blur, 30, 150)
     
-    # Dilatar los bordes para cerrar gaps
     kernel = np.ones((5, 5), np.uint8)
     edged = cv2.dilate(edged, kernel, iterations=2)
     edged = cv2.erode(edged, kernel, iterations=1)
@@ -198,7 +198,6 @@ def _alinear_por_contorno(img_original, guardar_debug=False):
 
     screenCnt = None
     if cnts:
-        # Ordenar contornos por área, de mayor a menor
         cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:5]
 
         for c in cnts:
@@ -212,7 +211,7 @@ def _alinear_por_contorno(img_original, guardar_debug=False):
             if len(approx) == 4:
                 rect = cv2.boundingRect(approx)
                 aspect_ratio = rect[3] / float(rect[2]) 
-                if aspect_ratio > 1.0: 
+                if aspect_ratio > 0.8: 
                     screenCnt = approx.reshape(4, 2).astype("float32")
                     print(f"[ALINEACION] Contorno cuadrilátero detectado: area={area:.0f}, aspect={aspect_ratio:.2f}")
                     break
@@ -231,8 +230,6 @@ def _alinear_por_contorno(img_original, guardar_debug=False):
         return None
 
     pts = screenCnt * ratio
-
-    # Ordenar los 4 puntos
     rect = _order_points(pts)
 
     widthA = np.linalg.norm(rect[2] - rect[3])
@@ -266,7 +263,7 @@ def _alinear_por_contorno(img_original, guardar_debug=False):
 
     return warped
 
-
+#con esto se obtienen las dimensiones de la plantilla (storage/plantilla/maestra_referencia.png)
 def _alinear_simple_resize(img_original):
     w_dest, h_dest = _obtener_dimensiones_plantilla()
     print("[ALINEACION] Usando resize directo como último recurso.")
@@ -284,13 +281,12 @@ def _order_points(pts):
     return rect
 
 
+#alinea la imagen para evitar dobleces y el escáner pueda trabajar de forma limpia
 def alinear_imagen(img_original, guardar_debug=True):
-
-    #Feature matching
-    print("[ALINEACION] Intentando alineación por feature matching (ORB)...")
-    resultado = _alinear_por_capas(img_original, guardar_debug=guardar_debug)
+    print("[ALINEACION] Intentando alineación por detección de contorno...")
+    resultado = _alinear_por_contorno(img_original, guardar_debug=guardar_debug)
     if resultado is not None:
-        print("[ALINEACION] [OK] Feature matching exitoso.")
+        print("[ALINEACION] [OK] Deteccion de contorno exitosa.")
         if guardar_debug:
             try:
                 cv2.imwrite(os.path.join(DEBUG_DIR, 'debug_alineada.jpg'), resultado)
@@ -298,10 +294,10 @@ def alinear_imagen(img_original, guardar_debug=True):
                 pass
         return resultado
 
-    print("[ALINEACION] Intentando alineación por detección de contorno...")
-    resultado = _alinear_por_contorno(img_original, guardar_debug=guardar_debug)
+    print("[ALINEACION] Intentando alineación por feature matching (ORB/SIFT)...")
+    resultado = _alinear_por_capas(img_original, guardar_debug=guardar_debug)
     if resultado is not None:
-        print("[ALINEACION] [OK] Deteccion de contorno exitosa.")
+        print("[ALINEACION] [OK] Feature matching exitoso.")
         if guardar_debug:
             try:
                 cv2.imwrite(os.path.join(DEBUG_DIR, 'debug_alineada.jpg'), resultado)
@@ -320,7 +316,7 @@ def alinear_imagen(img_original, guardar_debug=True):
 
 # checkboxes
 
-def evaluar_checkbox_preciso(roi):
+"""def evaluar_checkbox_preciso(roi):
 
     if roi is None or roi.size == 0:
         return False
@@ -347,11 +343,49 @@ def evaluar_checkbox_preciso(roi):
     if 3.0 < porcentaje < 40.0:
         return True #por si acaso 
 
+    return False"""
+    
+#probando esta función antes de borrar la anterior:
+def evaluar_checkbox_preciso(roi):
+    if roi is None or roi.size == 0:
+        return False
+
+    gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    h, w = gris.shape
+
+    m_h, m_w = int(h * 0.25), int(w * 0.35)
+    centro = gris[m_h: h - m_h, m_w: w - m_w]
+
+    if centro.size == 0:
+        return False
+
+    blur = cv2.GaussianBlur(centro, (5, 5), 0)
+
+    block_size = max(15, (min(blur.shape) // 2) * 2 + 1)
+    thresh = cv2.adaptiveThreshold(
+        blur, 
+        255, 
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+        cv2.THRESH_BINARY_INV, 
+        block_size, 
+        20
+    )
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    thresh_limpio = cv2.erode(thresh, kernel, iterations=1)
+
+    pixeles_tinta = cv2.countNonZero(thresh_limpio)
+    porcentaje = (pixeles_tinta / float(centro.size)) * 100.0
+
+    if 1.5 < porcentaje < 50.0:
+        return True
+
     return False
 
 
 #procesador
-
+#aquí, se procesa la foto de la encuesta junto a los motores de PaddleOCR y OpenCV
+#OpenCV procesa la imagen y PaddleOCR reconoce Texto
 def procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=None):
 
     from services.ocr_service import OCRService

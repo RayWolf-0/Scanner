@@ -1,0 +1,50 @@
+.historialContainer {
+    min-height: 100vh;
+    background-color: var(--bg-main);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 4rem 1rem;
+}
+
+.historialCard {
+    background-color: var(--bg-card);
+    width: 100%;
+    max-width: 1000px;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+}
+
+.historialTitle { font-size: 1.8rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600; }
+.filtrosBar {
+    display: flex;
+    gap: 1.5rem;
+    background-color: var(--bg-main);
+    padding: 1.2rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+.filtroGroup { display: flex; align-items: center; gap: 0.5rem; }
+.filtroGroup select {
+    background-color: var(--bg-card);
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+}
+
+.tablaResponsive { overflow-x: auto; }
+.tablaHistorial { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+.tablaHistorial th, .tablaHistorial td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+.tablaHistorial th { background-color: var(--bg-main); color: var(--text-muted); font-size: 0.9rem; }
+
+.btnAccion { border: none; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity 0.2s; }
+.btnAccion:hover { opacity: 0.85; }
+.btnEditar { background-color: var(--color-primary); color: white; }
+.btnEliminar { background-color: var(--color-danger); color: white; }
+.btnPdf { background-color: #d69e2e; color: white; }
+.btnExcel { background-color: var(--color-success); color: white; }

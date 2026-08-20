@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import text
+from database import SessionLocal
 
 auth_router = APIRouter()
 
@@ -22,13 +23,12 @@ def login(datos: LoginRequest):
     if not datos.usuario or not datos.password:
         raise HTTPException(status_code=400, detail="Por favor ingresa usuario y contraseña")
 
-    from main import SessionLocal
     db = SessionLocal()
     try:
-        # Buscar usuario
+        # Buscar usuario (tabla en mayúsculas: USUARIO)
         query = text("""
             SELECT u.*, r.nombre_rol 
-            FROM usuario u 
+            FROM USUARIO u 
             JOIN ROL_USUARIO r ON u.id_rol = r.id_rol 
             WHERE u.user = :usr OR u.mail = :usr
         """)
@@ -56,7 +56,7 @@ def login(datos: LoginRequest):
                 'nombre': f"{result['nombre']} {result['apellido']}",
                 'username': result['user'],
                 'id_rol': result['id_rol'],
-                'rol': nombre_rol_db  # ¿supervisor o vendedor?
+                'rol': nombre_rol_db  # supervisor o vendedor
             }
         else:
             raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
@@ -71,11 +71,10 @@ def login(datos: LoginRequest):
 
 @auth_router.put('/api/auth/cambiar-password')
 def cambiar_password(datos: ChangePasswordRequest):
-    from main import SessionLocal
     db = SessionLocal()
     try:
-        # Buscar al usuario por su ID
-        query = text("SELECT * FROM usuario WHERE id_usuario = :id")
+        # Buscar al usuario por su ID (tabla en mayúsculas: USUARIO)
+        query = text("SELECT * FROM USUARIO WHERE id_usuario = :id")
         result = db.execute(query, {"id": datos.id_usuario}).mappings().fetchone()
 
         if not result:
@@ -96,9 +95,9 @@ def cambiar_password(datos: ChangePasswordRequest):
         # hash contraseña
         nueva_hash = generate_password_hash(datos.password_nueva)
 
-        # actualizar bd
+        # actualizar bd (tabla en mayúsculas: USUARIO)
         db.execute(
-            text("UPDATE usuario SET contrasena = :nueva WHERE id_usuario = :id"),
+            text("UPDATE USUARIO SET contrasena = :nueva WHERE id_usuario = :id"),
             {"nueva": nueva_hash, "id": datos.id_usuario}
         )
         db.commit()

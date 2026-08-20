@@ -1,270 +1,313 @@
-import cv2
-from flask import Blueprint, request, jsonify, send_file
-import numpy as np
-import pandas as pd
-from io import BytesIO
+import traceback
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
-from models import db
-from services.processor import procesar_encuesta_hibrida
-# Librerías para generación de PDF
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-encuesta_bp = Blueprint('encuesta_bp', __name__)
+from database import SessionLocal
+from schemas.encuesta import EncuestaSchema
 
-# listar encuestas
-@encuesta_bp.route('/api/encuesta/listar', methods=['GET'])
+encuesta_router = APIRouter(prefix="/api/encuesta", tags=["Encuestas"])
+
+@encuesta_router.post("/guardar")
+@encuesta_router.post("")
+def guardar_y_generar_encuesta(payload: EncuestaSchema):
+    db = SessionLocal()
+    try:
+        datos = payload.model_dump()
+        extra_datos = payload.model_extra or {}
+
+        def limpiar_evaluacion(val):
+            if not val: return None
+            v_lower = str(val).lower()
+            if "siempre" in v_lower: return "Siempre"
+            if "generalmente" in v_lower: return "Generalmente"
+            if "rara" in v_lower: return "Rara vez"
+            if "nunca" in v_lower: return "Nunca"
+            return val
+
+        datos['p1_1'] = limpiar_evaluacion(datos.get('p1_1') or extra_datos.get('pedidos_completos'))
+        datos['p1_2'] = limpiar_evaluacion(datos.get('p1_2') or extra_datos.get('pedidos_rapidos'))
+        datos['p1_3'] = limpiar_evaluacion(datos.get('p1_3') or extra_datos.get('respuestas_oportunas'))
+        
+        datos['p2_1'] = limpiar_evaluacion(datos.get('p2_1') or extra_datos.get('producto_bien_presentado'))
+        datos['p2_2'] = limpiar_evaluacion(datos.get('p2_2') or extra_datos.get('producto_buena_calidad'))
+        datos['p2_3'] = limpiar_evaluacion(datos.get('p2_3') or extra_datos.get('informacion_productos_nuevos'))
+        
+        datos['p3_1'] = limpiar_evaluacion(datos.get('p3_1') or extra_datos.get('contacto_con_ejecutivo'))
+        datos['p3_2'] = limpiar_evaluacion(datos.get('p3_2') or extra_datos.get('calidad_atencion'))
+        datos['p3_3'] = limpiar_evaluacion(datos.get('p3_3') or extra_datos.get('personal_domina_informacion'))
+
+        red_usa = datos.get('red_mas_usa') or extra_datos.get('red_social_usa', "")
+        red_sigue = datos.get('red_sigue') or extra_datos.get('red_social_sigue', "")
+        
+        if isinstance(red_usa, list): red_usa = ", ".join(red_usa)
+        if isinstance(red_sigue, list): red_sigue = ", ".join(red_sigue)
+        
+        datos['red_mas_usa'] = red_usa
+        datos['red_sigue'] = red_sigue
+        datos['observaciones'] = datos.get('observaciones') or extra_datos.get('obs_recomen')
+
+        # Detección de id_usuario
+        id_usuario_real = extra_datos.get("id_usuario") or datos.get("id_usuario")
+        if not id_usuario_real:
+            primer_usr = db.execute(text("SELECT id_usuario FROM usuario LIMIT 1")).fetchone()
+            id_usuario_real = primer_usr[0] if primer_usr else 3
+
+        # insertar encuesta
+        enc_res = db.execute(
+            text(
+                "INSERT INTO encuesta (id_usuario, empresa, rut, encuestado, cargo,"
+                " correo, telefono, fecha) VALUES (:id_usuario, :empresa, :rut,"
+                " :encuestado, :cargo, :correo, :telefono, :fecha)"
+            ),
+            {
+                "id_usuario": id_usuario_real,
+                "empresa": datos.get("nombre_empresa", ""),
+                "rut": datos.get("rut_empresa", ""),
+                "encuestado": datos.get("nombre_encuestado", ""),
+                "cargo": datos.get("cargo", ""),
+                "correo": datos.get("correo", ""),
+                "telefono": datos.get("telefono", ""),
+                "fecha": datos.get("fecha", ""),
+            },
+        )
+        db.commit()
+        registro_id = enc_res.lastrowid
+
+        # insertar dato_extraido acorde al id
+        db.execute(
+            text("""
+                INSERT INTO dato_extraido (
+                    id, nombre_empresa, rut_empresa, nombre_encuestado, cargo, correo, telefono, fecha, firma,
+                    p1_1, p1_2, p1_3, p2_1, p2_2, p2_3, p3_1, p3_2, p3_3, 
+                    red_mas_usa, red_sigue, correo_informativo, observaciones
+                ) VALUES (
+                    :id, :nombre_empresa, :rut_empresa, :nombre_encuestado, :cargo, :correo, :telefono, :fecha, '',
+                    :p1_1, :p1_2, :p1_3, :p2_1, :p2_2, :p2_3, :p3_1, :p3_2, :p3_3, 
+                    :red_mas_usa, :red_sigue, :correo_informativo, :observaciones
+                )
+            """),
+            {**datos, "id": registro_id},
+        )
+        db.commit()
+
+        # asignar documento según id
+        db.execute(
+            text("INSERT INTO DOCUMENTO (id_plantilla, id_vendedor, id_estado, ruta_pdf_final) VALUES (1, :vendedor, 1, '')"),
+            {"vendedor": id_usuario_real},
+        )
+        db.commit()
+
+        return {
+            "status": "success",
+            "id_encuesta": registro_id,
+            "mensaje": "encuesta guardada exitosamente"
+        }
+    except Exception as e:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+@encuesta_router.get("/detalle/{registro_id}")
+def obtener_detalle_encuesta(registro_id: int):
+    db = SessionLocal()
+    try:
+        enc = db.execute(text("SELECT * FROM encuesta WHERE id_encuesta = :id"), {"id": registro_id}).mappings().fetchone()
+        if not enc:
+            raise HTTPException(status_code=404, detail="Encuesta no encontrada")
+            
+        det = db.execute(text("SELECT * FROM dato_extraido WHERE id = :id"), {"id": registro_id}).mappings().fetchone()
+        
+        if not det:
+            det = db.execute(
+                text("SELECT * FROM dato_extraido WHERE rut_empresa = :rut AND fecha = :fecha ORDER BY id DESC LIMIT 1"),
+                {"rut": enc["rut"], "fecha": enc["fecha"]}
+            ).mappings().fetchone()
+            
+        resultado = dict(enc)
+        if det:
+            det_dict = dict(det)
+            resultado.update(det_dict)
+            
+            # traductor pdf de react
+            resultado['pedidos_completos'] = det_dict.get('p1_1')
+            resultado['pedidos_rapidos'] = det_dict.get('p1_2')
+            resultado['respuestas_oportunas'] = det_dict.get('p1_3')
+            
+            resultado['producto_bien_presentado'] = det_dict.get('p2_1')
+            resultado['producto_buena_calidad'] = det_dict.get('p2_2')
+            resultado['informacion_productos_nuevos'] = det_dict.get('p2_3')
+            
+            resultado['contacto_con_ejecutivo'] = det_dict.get('p3_1')
+            resultado['calidad_atencion'] = det_dict.get('p3_2')
+            resultado['personal_domina_informacion'] = det_dict.get('p3_3')
+            
+            if det_dict.get('red_mas_usa'):
+                resultado['red_social_usa'] = [r.strip() for r in str(det_dict.get('red_mas_usa')).split(',')]
+            if det_dict.get('red_sigue'):
+                resultado['red_social_sigue'] = [r.strip() for r in str(det_dict.get('red_sigue')).split(',')]
+            
+        # Obtener nombre del usuario
+        resultado['usuario'] = 'Vendedor'
+        try:
+            if 'id_usuario' in resultado and resultado['id_usuario']:
+                usr = db.execute(text("SELECT * FROM usuario WHERE id_usuario = :uid OR id = :uid"), {"uid": resultado['id_usuario']}).mappings().fetchone()
+                if usr:
+                    nombre = usr.get('nombre', '')
+                    apellido = usr.get('apellido', '')
+                    if nombre or apellido:
+                        resultado['usuario'] = f"{nombre} {apellido}".strip()
+                    else:
+                        for key in ['username', 'usuario', 'mail', 'user']:
+                            if key in usr and usr[key]:
+                                resultado['usuario'] = usr[key]
+                                break
+        except Exception:
+            pass
+
+        return resultado
+    finally:
+        db.close()
+
+@encuesta_router.get("/listar")
 def listar_encuestas():
+    db = SessionLocal()
     try:
-        with db.engine.connect() as conn:
-            query = text("""
+        query = text("""
             SELECT 
-                    e.*, 
-                    (SELECT user FROM USUARIO WHERE id_usuario = e.id_usuario) AS username,
-                    (SELECT nombre FROM USUARIO WHERE id_usuario = e.id_usuario) AS nombre,
-                    (SELECT apellido FROM USUARIO WHERE id_usuario = e.id_usuario) AS apellido
-                FROM encuesta e 
-                ORDER BY e.id_encuesta DESC
-            """)
-            result = conn.execute(query).mappings().fetchall()
-            encuestas = [dict(row) for row in result]
-            return jsonify(encuestas), 200
+                e.*, 
+                (SELECT user FROM USUARIO WHERE id_usuario = e.id_usuario) AS username,
+                (SELECT nombre FROM USUARIO WHERE id_usuario = e.id_usuario) AS nombre,
+                (SELECT apellido FROM USUARIO WHERE id_usuario = e.id_usuario) AS apellido
+            FROM encuesta e 
+            ORDER BY e.id_encuesta DESC
+        """)
+        resultados = db.execute(query).mappings().fetchall()
+        return [dict(row) for row in resultados]
     except Exception as e:
-        print("Error en listar_encuestas:", str(e))
-        return jsonify({'error': str(e)}), 500
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
-# guardar encuesta
-@encuesta_bp.route('/api/encuesta/guardar', methods=['POST'])
-def guardar_encuesta():
-    datos = request.get_json() or {}
+
+@encuesta_router.put("/actualizar/{registro_id}")
+def actualizar_encuesta(registro_id: int, payload: dict):
+    db = SessionLocal()
     try:
-        with db.engine.connect() as conn:
-            query = text("""
-                INSERT INTO encuesta (id_usuario, empresa, rut, encuestado, cargo, fecha, telefono, correo)
-                VALUES (:id_usuario, :empresa, :rut, :encuestado, :cargo, :fecha, :telefono, :correo)
-            """)
-            result = conn.execute(query, {
-                "id_usuario": datos.get('id_usuario'),
-                "empresa": datos.get('empresa'),
-                "rut": datos.get('rut'),
-                "encuestado": datos.get('encuestado'),
-                "cargo": datos.get('cargo'),
-                "fecha": datos.get('fecha'),
-                "telefono": datos.get('telefono'),
-                "correo": datos.get('correo')
-            })
-            conn.commit()
-            id_creado = result.lastrowid
-
-        return jsonify({
-            'status': 'success',
-            'mensaje': 'Encuesta guardada con éxito',
-            'id_encuesta': id_creado
-        }), 200
-
-    except Exception as e:
-        db.session.rollback()
-        print("Error en guardar_encuesta:", str(e))
-        return jsonify({'error': str(e)}), 500
-
-
-# editar encuesta
-@encuesta_bp.route('/api/encuesta/actualizar/<int:id_encuesta>', methods=['PUT'])
-def actualizar_encuesta(id_encuesta):
-    datos = request.get_json() or {}
-    try:
-        with db.engine.connect() as conn:
-            query = text("""
+        db.execute(
+            text("""
                 UPDATE encuesta 
                 SET empresa = :empresa, rut = :rut, encuestado = :encuestado, 
-                    cargo = :cargo, fecha = :fecha, telefono = :telefono, correo = :correo
+                    cargo = :cargo, correo = :correo, telefono = :telefono, fecha = :fecha
                 WHERE id_encuesta = :id
-            """)
-            conn.execute(query, {
-                "empresa": datos.get('empresa'),
-                "rut": datos.get('rut'),
-                "encuestado": datos.get('encuestado'),
-                "cargo": datos.get('cargo'),
-                "fecha": datos.get('fecha'),
-                "telefono": datos.get('telefono'),
-                "correo": datos.get('correo'),
-                "id": id_encuesta
-            })
-            conn.commit()
-            return jsonify({'status': 'success', 'mensaje': 'Encuesta actualizada con éxito'}), 200
-    except Exception as e:
-        db.session.rollback()
-        print("Error en actualizar_encuesta:", str(e))
-        return jsonify({'error': str(e)}), 500
-
-
-# eliminar encuesta
-@encuesta_bp.route('/api/encuesta/eliminar/<int:id_encuesta>', methods=['DELETE'])
-def eliminar_encuesta(id_encuesta):
-    try:
-        with db.engine.connect() as conn:
-            query = text("DELETE FROM encuesta WHERE id_encuesta = :id")
-            conn.execute(query, {"id": id_encuesta})
-            conn.commit()
-            return jsonify({'status': 'success', 'mensaje': 'Encuesta eliminada correctamente'}), 200
-    except Exception as e:
-        db.session.rollback()
-        print("Error en eliminar_encuesta:", str(e))
-        return jsonify({'error': str(e)}), 500
-
-
-# exportar a excel
-@encuesta_bp.route('/api/encuesta/exportar/excel/<int:id_encuesta>', methods=['GET'])
-def exportar_excel(id_encuesta):
-    try:
-        with db.engine.connect() as conn:
-            query = text("SELECT * FROM encuesta WHERE id_encuesta = :id")
-            result = conn.execute(query, {"id": id_encuesta}).mappings().fetchone()
-
-            if not result:
-                return jsonify({'error': 'Encuesta no encontrada'}), 404
-
-            datos = {
-                'Campo': ['ID Encuesta', 'Empresa', 'RUT', 'Encuestado', 'Cargo', 'Fecha', 'Teléfono', 'Correo'],
-                'Valor': [
-                    result['id_encuesta'], result['empresa'], result['rut'], 
-                    result['encuestado'], result['cargo'], result['fecha'], 
-                    result['telefono'], result['correo']
-                ]
+            """),
+            {
+                "id": registro_id,
+                "empresa": payload.get("empresa", payload.get("nombre_empresa", "")),
+                "rut": payload.get("rut", payload.get("rut_empresa", "")),
+                "encuestado": payload.get("encuestado", payload.get("nombre_encuestado", "")),
+                "cargo": payload.get("cargo", ""),
+                "correo": payload.get("correo", ""),
+                "telefono": payload.get("telefono", ""),
+                "fecha": payload.get("fecha", "")
             }
-            df = pd.DataFrame(datos)
-
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Plantilla Maestra', startrow=2)
-            workbook  = writer.book
-            worksheet = writer.sheets['Plantilla Maestra']
-
-            title_format = workbook.add_format({
-                'bold': True,
-                'font_size': 14,
-                'font_color': '#1A202C'
-            })
-            worksheet.write('A1', 'PLANTILLA MAESTRA DE ENCUESTA', title_format)
-            worksheet.set_column('A:A', 22)
-            worksheet.set_column('B:B', 35)
-
-        output.seek(0)
-
-        return send_file(
-            output,
-            download_name=f'Encuesta_Maestra_{id_encuesta}.xlsx',
-            as_attachment=True,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-    except Exception as e:
-        print("Error en exportar_excel:", str(e))
-        return jsonify({'error': str(e)}), 500
-
-
-# exportar a pdf
-@encuesta_bp.route('/api/encuesta/exportar/pdf/<int:id_encuesta>', methods=['GET'])
-def exportar_pdf(id_encuesta):
-    try:
-        with db.engine.connect() as conn:
-            query = text("SELECT * FROM encuesta WHERE id_encuesta = :id")
-            result = conn.execute(query, {"id": id_encuesta}).mappings().fetchone()
-
-            if not result:
-                return jsonify({'error': 'Encuesta no encontrada'}), 404
-
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
-        elements = []
-
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            'TitleStyle',
-            parent=styles['Heading1'],
-            fontSize=18,
-            textColor=colors.HexColor('#1E242D'),
-            alignment=1, # Centrado
-            spaceAfter=20
         )
 
-        # Título del documento
-        elements.append(Paragraph("<b>PLANTILLA MAESTRA DE ENCUESTA</b>", title_style))
-        elements.append(Spacer(1, 10))
+        def limpiar_evaluacion(val):
+            if not val: return None
+            v_lower = str(val).lower()
+            if "siempre" in v_lower: return "Siempre"
+            if "generalmente" in v_lower: return "Generalmente"
+            if "rara" in v_lower: return "Rara vez"
+            if "nunca" in v_lower: return "Nunca"
+            return val
 
-        # Formato de la Tabla
-        table_data = [
-            [Paragraph('<b>Campo</b>', styles['Normal']), Paragraph('<b>Detalle Registrado</b>', styles['Normal'])],
-            ['ID Encuesta:', str(result['id_encuesta'])],
-            ['Empresa:', str(result['empresa'] or '')],
-            ['RUT:', str(result['rut'] or '')],
-            ['Encuestado:', str(result['encuestado'] or '')],
-            ['Cargo:', str(result['cargo'] or '')],
-            ['Fecha de Registro:', str(result['fecha'] or '')],
-            ['Teléfono:', str(result['telefono'] or '')],
-            ['Correo Electrónico:', str(result['correo'] or '')],
-        ]
-
-        t = Table(table_data, colWidths=[150, 350])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#2B323C')),
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F7FAFC')),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E0')),
-            ('PADDING', (0, 0), (-1, -1), 8),
-        ]))
-
-        elements.append(t)
-        doc.build(elements)
-
-        buffer.seek(0)
-        return send_file(
-            buffer,
-            download_name=f'Encuesta_Maestra_{id_encuesta}.pdf',
-            as_attachment=True,
-            mimetype='application/pdf'
-        )
-
-    except Exception as e:
-        print("Error en exportar_pdf:", str(e))
-        return jsonify({'error': str(e)}), 500
-    
-@encuesta_bp.route('/api/scanner/analizar', methods=['POST'])
-def analizar_imagen_encuesta():
-    try:
-        # verificar archivo enviado desde el frontend
-        if 'imagen' not in request.files:
-            return jsonify({'error': 'No se envió ninguna imagen en la petición.'}), 400
+        red_usa = payload.get("red_mas_usa", payload.get("red_social_usa", ""))
+        if isinstance(red_usa, list): red_usa = ", ".join(red_usa)
         
-        archivo = request.files['imagen']
-        if archivo.filename == '':
-            return jsonify({'error': 'El archivo enviado no tiene nombre o está vacío.'}), 400
+        red_sigue = payload.get("red_sigue", payload.get("red_social_sigue", ""))
+        if isinstance(red_sigue, list): red_sigue = ", ".join(red_sigue)
 
-        # leer a través de la memoria ram
-        file_bytes = np.frombuffer(archivo.read(), np.uint8)
-        img_original = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        params_det = {
+            "id": registro_id,
+            "empresa": payload.get("empresa", payload.get("nombre_empresa", "")),
+            "rut": payload.get("rut", payload.get("rut_empresa", "")),
+            "encuestado": payload.get("encuestado", payload.get("nombre_encuestado", "")),
+            "cargo": payload.get("cargo", ""),
+            "correo": payload.get("correo", ""),
+            "telefono": payload.get("telefono", ""),
+            "fecha": payload.get("fecha", ""),
+            "p1_1": limpiar_evaluacion(payload.get("p1_1") or payload.get("pedidos_completos")),
+            "p1_2": limpiar_evaluacion(payload.get("p1_2") or payload.get("pedidos_rapidos")),
+            "p1_3": limpiar_evaluacion(payload.get("p1_3") or payload.get("respuestas_oportunas")),
+            "p2_1": limpiar_evaluacion(payload.get("p2_1") or payload.get("producto_bien_presentado")),
+            "p2_2": limpiar_evaluacion(payload.get("p2_2") or payload.get("producto_buena_calidad")),
+            "p2_3": limpiar_evaluacion(payload.get("p2_3") or payload.get("informacion_productos_nuevos")),
+            "p3_1": limpiar_evaluacion(payload.get("p3_1") or payload.get("contacto_con_ejecutivo")),
+            "p3_2": limpiar_evaluacion(payload.get("p3_2") or payload.get("calidad_atencion")),
+            "p3_3": limpiar_evaluacion(payload.get("p3_3") or payload.get("personal_domina_informacion")),
+            "red_mas_usa": red_usa,
+            "red_sigue": red_sigue,
+            "correo_informativo": payload.get("correo_informativo", 0),
+            "observaciones": payload.get("observaciones", payload.get("obs_recomen", ""))
+        }
 
-        if img_original is None:
-            return jsonify({'error': 'La imagen está corrupta, es ilegible o el formato no es soportado.'}), 400
+        existe_det = db.execute(text("SELECT id FROM dato_extraido WHERE id = :id"), {"id": registro_id}).fetchone()
 
-        # id_plantilla
-        id_plantilla = int(request.form.get('id_plantilla', 1))
+        if existe_det:
+            db.execute(
+                text("""
+                    UPDATE dato_extraido 
+                    SET nombre_empresa = :empresa, rut_empresa = :rut, nombre_encuestado = :encuestado,
+                        cargo = :cargo, correo = :correo, telefono = :telefono, fecha = :fecha,
+                        p1_1 = :p1_1, p1_2 = :p1_2, p1_3 = :p1_3,
+                        p2_1 = :p2_1, p2_2 = :p2_2, p2_3 = :p2_3,
+                        p3_1 = :p3_1, p3_2 = :p3_2, p3_3 = :p3_3,
+                        red_mas_usa = :red_mas_usa, red_sigue = :red_sigue,
+                        correo_informativo = :correo_informativo,
+                        observaciones = :observaciones
+                    WHERE id = :id
+                """),
+                params_det
+            )
+        else:
+            db.execute(
+                text("""
+                    INSERT INTO dato_extraido (
+                        id, nombre_empresa, rut_empresa, nombre_encuestado, cargo, correo, telefono, fecha, firma,
+                        p1_1, p1_2, p1_3, p2_1, p2_2, p2_3, p3_1, p3_2, p3_3, 
+                        red_mas_usa, red_sigue, correo_informativo, observaciones
+                    ) VALUES (
+                        :id, :empresa, :rut, :encuestado, :cargo, :correo, :telefono, :fecha, '',
+                        :p1_1, :p1_2, :p1_3, :p2_1, :p2_2, :p2_3, :p3_1, :p3_2, :p3_3, 
+                        :red_mas_usa, :red_sigue, :correo_informativo, :observaciones
+                    )
+                """),
+                params_det
+            )
 
-        # motor hibrido (paddle + openvc)
-        print("[API SCANNER] Procesando fotografía...")
-        datos_extraidos = procesar_encuesta_hibrida(img_original, id_plantilla)
-
-        # json
-        return jsonify({
-            'status': 'success',
-            'mensaje': 'Imagen escaneada y procesada correctamente.',
-            'data': datos_extraidos
-        }), 200
-
+        db.commit()
+        return {"status": "success", "mensaje": "Encuesta actualizada correctamente"}
     except Exception as e:
-        print("Error en analizar_imagen_encuesta:", str(e))
-        return jsonify({'error': f'Error interno del motor escáner: {str(e)}'}), 500
+        db.rollback()
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+@encuesta_router.delete("/eliminar/{registro_id}")
+def eliminar_encuesta(registro_id: int):
+    db = SessionLocal()
+    try:
+        db.execute(text("DELETE FROM encuesta WHERE id_encuesta = :id"), {"id": registro_id})
+        db.execute(text("DELETE FROM dato_extraido WHERE id = :id"), {"id": registro_id})
+        db.commit()
+        return {"status": "success", "mensaje": "Encuesta eliminada"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
