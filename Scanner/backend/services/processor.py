@@ -34,7 +34,7 @@ def corregir_orientacion_desde_bytes(raw_bytes):
         pil_img = ImageOps.exif_transpose(pil_img)
         if pil_img.mode != 'RGB':
             pil_img = pil_img.convert('RGB')
-        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_BAYER_BG2BGR)
+        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
     except Exception as e:
         print(f"[ORIENTACIÓN] no se pudo leer desde bytes: {e}")
         nparr = np.frombuffer(raw_bytes, np.uint8)
@@ -377,31 +377,29 @@ def evaluar_checkbox_preciso(roi):
     gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     h, w = gris.shape
 
-    m_h, m_w = int(h * 0.25), int(w * 0.35)
+    # Margen moderado: suficiente para no comerse una X dibujada cerca del
+    # borde (como pasaba con el margen de 0.25/0.35 anterior), pero sin
+    # dejar pasar demasiado borde de la celda.
+    m_h, m_w = int(h * 0.12), int(w * 0.12)
     centro = gris[m_h: h - m_h, m_w: w - m_w]
 
     if centro.size == 0:
         return False
 
-    blur = cv2.GaussianBlur(centro, (5, 5), 0)
+    std_dev = cv2.meanStdDev(centro)[1][0][0]
+    if std_dev < 8.0:
+        return False
 
-    block_size = max(15, (min(blur.shape) // 2) * 2 + 1)
-    thresh = cv2.adaptiveThreshold(
-        blur, 
-        255, 
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 
-        block_size, 
-        20
-    )
+    _, thresh = cv2.threshold(centro, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-    thresh_limpio = cv2.erode(thresh, kernel, iterations=1)
+    kernel_h = cv2.getStructuringElement(cv2.MORPH_RECT, (max(15, w // 3), 1))
+    sin_lineas = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel_h)
+    thresh_limpio = cv2.subtract(thresh, sin_lineas)
 
     pixeles_tinta = cv2.countNonZero(thresh_limpio)
     porcentaje = (pixeles_tinta / float(centro.size)) * 100.0
 
-    if 1.5 < porcentaje < 50.0:
+    if 4.0 < porcentaje < 40.0:
         return True
 
     return False
@@ -444,6 +442,7 @@ def procesar_encuesta_hibrida(img_original, id_plantilla, raw_bytes=None):
 
             print("[SCANNER] Iniciando extracción de texto sobre lienzo limpio...")
             datos_texto_bruto = OCRService.procesar_encuesta_completa(lienzo_ocr)
+            print(f"[DEBUG OCR CRUDO] {datos_texto_bruto}")
             
             #limpia el texto extraido
             datos_texto_limpios = limpiar_datos_texto(datos_texto_bruto)

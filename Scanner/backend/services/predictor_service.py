@@ -18,7 +18,7 @@ class MotorCorreccion:
             'SISTEMAS'
         ]
         
-    def _corregir_con_difflib(self, texto, opciones_validas, similitud=0.5):
+    def _corregir_con_difflib(self, texto, opciones_validas, similitud=0.72):
         if not texto:
             return ""
         texto = str(texto).upper().strip()
@@ -62,4 +62,3 @@ class MotorCorreccion:
                 datos_ocr[clave] = self._corregir_con_spellchecker(valor)
                 
         return datos_ocr
-            
